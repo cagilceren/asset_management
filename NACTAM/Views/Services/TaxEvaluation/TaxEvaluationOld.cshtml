@@ -1,0 +1,291 @@
+@model NACTAM.ViewModels.TaxEvaluation.TaxEvaluationViewModel;
+@using System.Text.Json
+@using System.Globalization
+
+@{
+	ViewData["Title"] = "Steuerliche Auswertung";
+}
+
+@{
+	CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+}
+
+
+<!-- Begin Page Content -->
+<div class="container-fluid" id="page">
+	<div id="error-banner-1" class="alert alert-danger">Bitte wählen Sie zuerst ein Jahr aus und lassen die steuerliche Auswertung berechnen!</div>
+	<!-- Page Heading -->
+	<div class="d-sm-flex align-items-center justify-content-between mb-4">
+		<h1 class="h3 mb-0 text-gray-800">@ViewData["Title"]</h1>
+
+		<div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+			<button class="btn btn-primary shadow-sm" id="generate_pdf" type="button">
+				PDF erstellen
+			</button>
+		</div>
+	</div>
+	<hr>
+	<div class="group d-flex flex-row align-items-center mb-4" role="group">
+		<div class="btn-group" role="group">
+			<form class="btn-group" asp-controller="Services" asp-action="FilterTransactions" method="post" id="dropdownform">
+				<select class="form-control form-control-user" id="currencyList" style="padding: 0 1rem; height: 3rem; width: 14rem;" asp-for="CryptoCurrency">
+					<option style="color: var(--white) !important;" value="" disabled selected>Kryptowährung auswählen</option>
+					@if (@Model.CryptoCurrencyTransactions != null) {
+						@foreach (var item in @Model.CryptoCurrencyTransactions) {
+							<option value="@item.CryptoCurrency" name="@item.CryptoCurrency">@item.CryptoCurrency</option>
+						}
+					}
+				</select>
+
+				<select class="form-control form-control-user" id="yearList" style="padding: 0 1rem; height: 3rem; width: 9rem;" asp-for="Year">
+					<option style="color: var(--white) !important;" value="" disabled selected>Jahr auswählen</option>
+					@if (@Model.YearTransactions != null) {
+						@foreach (var item in @Model.YearTransactions) {
+							<option value="@item.SellDate.Year" name="@item.SellDate.Year">@item.SellDate.Year</option>
+						}
+					}
+				</select>
+
+				<button class="btn btn-primary form-control form-control-user" type="submit" style="height: 28px; padding: 0 6px; width: 7rem;" id="berechnen">
+					Berechnen
+				</button>
+			</form>
+		</div>
+	</div>
+
+
+	<div class="row">
+		<div class="col-xl mb-4">
+			<div class="card border-left-primary shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+								Gewinne
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="profit">@Model.Profit.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-euro-sign fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-danger shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+								Verluste
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="loss">@Model.Loss.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-euro-sign fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-warning shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+								Gebühren
+							</div>
+							<div class="row no-gutters align-items-center">
+								<div class="col-auto">
+									<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="fee">@Model.Fee.ToString("N2")</span> €</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-xl mb-4">
+			<div class="card border-left-success shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+								Gesamtgewinne aus Verkäufen
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="profitfromsales">@Model.ProfitFromSales.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-money-bills fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-info shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+								Steuerrelevante Gewinne aus Staking und Mining
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="sm">@Model.ProfitMiningStaking.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-coins fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-dark shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+								Restl. Freibetrag bei Verkäufen
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.SellProfitLimit.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-section fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-secondary shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+								Restl. Freibetrag bei Staking und Mining
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.OthersProfitLimit.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-section fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- Pie Chart 1-->
+		<div class="col-xl-6 col-lg-6">
+
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Anteil der steuerpflichtigen Veräußerungen</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="pieChart" style="display: block; height: 253px; width: 326px; margin-left: 150px;" width="652" height="506" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Bar Chart 1-->
+		<div class="col-xl-6 col-lg-6">
+
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Gewinne und Verluste im Vergleich</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="barChart" style="display: block; height: 253px; width: 326px;" width="652" height="506" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- Custom Chart 1-->
+		<div class="col-xl-12 col-lg-7">
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+					<h6 class="m-0 font-weight-bold text-primary">Zeitliche Übersicht von Käufen und Verkäufen</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-area"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="customChart" style="display: block; height: 320px; width: 1000px;" width="2500" height="640" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script type="text/javascript">
+		var profit = "@Model.Profit";
+		var loss = "@Model.Loss";
+		var fee = "@Model.Fee";
+		var profitfromsales = "@Model.ProfitFromSales";
+
+		var year = "@Model.Year";
+		var cryptocurrency = "@Model.CryptoCurrency";
+
+		var taxfreeprofit = "@Model.PdfData.SaleTaxDetails.TaxFreeSaleProfit.ToString("N2")";
+		var taxfreeloss = "@Model.PdfData.SaleTaxDetails.TaxFreeSaleLoss.ToString("N2")";
+		var taxfreefee = "@Model.PdfData.SaleTaxDetails.TaxFreeFee.ToString("N2")";
+		var taxliableprofit = "@Model.PdfData.SaleTaxDetails.TaxLiableSaleProfit.ToString("N2")";
+		var taxliableloss = "@Model.PdfData.SaleTaxDetails.TaxLiableSaleLoss.ToString("N2")";
+		var taxliablefee = "@Model.PdfData.SaleTaxDetails.TaxLiableFee.ToString("N2")";
+
+		var creationdate = "@Model.PdfData.CreationDate";
+		var pdfprofit = "@Model.PdfData.Profit.ToString("N2")";
+		var pdfloss = "@Model.PdfData.Loss.ToString("N2")";
+		var pdffee = "@Model.PdfData.Fee.ToString("N2")";
+		var mining = "@Model.PdfData.ProfitMiningStaking.Item1.ToString("N2")";
+		var staking = "@Model.PdfData.ProfitMiningStaking.Item2.ToString("N2")";
+		var salelimit = "@Model.PdfData.SellProfitLimit.ToString("N2")";
+		var otherslimit = "@Model.PdfData.OthersProfitLimit.ToString("N2")";
+
+		var taxationcount = ["@Model.TaxationCount.Item1", "@Model.TaxationCount.Item2"];
+		var transactions = @Html.Raw(JsonSerializer.Serialize(Model.ChartData));
+		transactions = transactions.map(x => [x.Amount, x.BeginDate.substring(0,10), x.EndDate.substring(0,10)]);
+
+	</script>
+	<!--PDF Generation-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js" integrity="sha384-NaWTHo/8YCBYJ59830LTz/P4aQZK1sS0SneOgAvhsIl3zBu8r9RevNg5lHCHAuQ/" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/1.5/canvg.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.js"></script>
+	<!--Select2 Dropdown-->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+	<script>$('#currencyList').select2();</script>
+	<script>$('#yearList').select2();</script>
+	<script>applyPlugin(jsPDF)</script>
+	<script src="~/js/taxevaluation.js" asp-append-version="true"></script>
+}
+
+<img id="hidden-logo" src="/images/logo_rescaled_for_pdfrecolored.png" style="display: none"></img>

@@ -1,0 +1,400 @@
+@using NACTAM.ViewModels.TaxEvaluationNew;
+@using System.Text.Json
+@using System.Globalization
+
+
+@{
+	ViewData["Title"] = "Steuerliche Auswertung";
+	CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+}
+
+@model TaxEvaluationViewModelNew;
+
+<script>
+let year = @Model.Year ;
+let username = "@Model.User.LastName @Model.User.FirstName";
+let address = "@(Model.User.StreetName??"k.A.") @(Model.User.HouseNumber??"k.A.")";
+let city = "@(Model.User.City??"k.A.") @(Model.User.ZIP?? "k.A.")";
+let email = "@Model.User.Email";
+let phonenumber = "@Html.Raw(Model.User.PhoneNumber)";
+let totalValues = [@Html.Raw(JsonSerializer.Serialize(Model.Total.Total)), @Html.Raw(JsonSerializer.Serialize(Model.Total.TotalTaxed))]
+</script>
+
+<!-- Begin Page Content -->
+<div class="container-fluid" id="page">
+	<!-- Page Heading -->
+	<div class="d-sm-flex align-items-center justify-content-between mb-4">
+		<h1 id="evaluation-title" class="h3 mb-0 text-gray-800">@ViewData["Title"]
+			<select class="form-control form-control-user" id="year-list" style="padding: 0 1rem; height: 3rem; width: 9rem;" asp-for="Year">
+				<option style="color: var(--white) !important;" value="" disabled selected>Jahr auswählen</option>
+					@foreach (var year in Model.PossibleYears) {
+						<option value="@year" name="@year">@year</option>
+					}
+			</select>
+			<script>
+				document.getElementById("year-list").addEventListener("change", function(ev){
+					window.location.href = "/Services/TaxEvaluation/?year=" + ev.target.value;
+				})
+			</script>
+		</h1>
+
+		<div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+			<button class="btn btn-primary shadow-sm" id="generate-pdf" type="button">
+				PDF erstellen
+			</button>
+		</div>
+	</div>
+	<hr>
+
+	<div class="row">
+		<div class="col-xl mb-4">
+			<div class="card border-left-primary shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+								<div class="mb-3 mb-sm-0 info">
+									<span class="text-primary">Bilanz als Gewinne - Verluste <i class="fas fa-info-circle"></i></span>
+									<p class="info-text">Der Gewinn ist hier die Summe aller Gewinne der Transaktionen, die für mehr Geld verkauft worden sind, als gekauft worden sind.<br/><br/>
+									Verluste sind hier die Summe der Verluste der Transaktionen, die für weniger Geld verkauft als gekauft worden sind, inklusive den Gebühren.<br/><br/>
+									Die Bilanz sind dabei Gewinne - Verluste.
+									</p>
+								</div>
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800">
+								<span id="gain">@((Model.Total.Total.Profits + Model.Total.Total.Losses).ToString("N2")) €</span> <br/>=<span class="space-4"></span>
+								<span id="calc">
+									<span class="text-success">@Model.Total.Total.Profits.ToString("N2") €</span>
+									- <span class="text-danger">@((-Model.Total.Total.Losses).ToString("N2")) €</span>
+								</span>
+							</div>
+							<hr>
+							<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+								<div class="mb-3 mb-sm-0 info">
+									<span class="text-primary">steuerpflichtige Bilanz <i class="fas fa-info-circle"></i></span>
+									<p class="info-text">
+									lässt sich aus steuerpflichtigen Gewinne - steuerpflichtige Verluste berechnen <br/> oder aus
+									steuerpflichtiges Einkommen - steuerpflichtige Ausgaben + Gewinne aus Staking und Mining - steuerrelevante Gebühren
+									</p>
+								</div>
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800">
+								<span id="gain-taxed">@((Model.Total.TotalTaxed.Profits + Model.Total.TotalTaxed.Losses).ToString("N2")) €</span>  <br/>=<span class="space-4"></span>
+								<span id="calc-taxed">
+									<span class="text-success">@Model.Total.TotalTaxed.Profits.ToString("N2") €</span>
+									- <span class="text-danger">@((-Model.Total.TotalTaxed.Losses).ToString("N2")) €</span>
+								</span>
+
+							</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-euro-sign fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-success shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+								Steuerpflichtige Bilanz aus Verkäufen
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800">
+								<span id="profitfromsales">@((Model.Total.TotalTaxed.ProfitsFromSelling + Model.Total.TotalTaxed.Losses).ToString("N2")) €</span><br/>= <span class="space-4"></span>
+								<span id="calc-taxed">
+									<span class="text-success">@Model.Total.TotalTaxed.ProfitsFromSelling.ToString("N2") €</span>
+									- <span class="text-danger">@((-Model.Total.TotalTaxed.Losses).ToString("N2")) €</span>
+								</span>
+							</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-money-bills fa-2x text-gray-300"></i>
+						</div>
+					</div>
+					<hr/>
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+								Restl. Freibetrag bei Verkäufen
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.Total.TotalTaxed.RemainingTaxFreeSales.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-section fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xl mb-4">
+			<div class="card border-left-info shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+								Gewinne aus Staking und Mining
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="sm">@Model.Total.TotalTaxed.ProfitsFromOther.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-coins fa-2x text-gray-300"></i>
+						</div>
+					</div>
+					<hr/>
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+								Restl. Freibetrag bei Staking und Mining
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.Total.TotalTaxed.RemainingTaxFreeOther.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-section fa-2x text-gray-300"></i>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+
+	</div>
+
+	<div class="row">
+		<div class="col-xl mb-4">
+			<div class="card border-left-success shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+								<div class="mb-3 mb-sm-0 info">
+									<span class="text-success">Einkommen <i class="fas fa-info-circle"></i></span>
+									<p class="info-text">
+									Im Gegensatz zu "Gewinnen" werden die Ausgaben nicht berücksichtigt und betrachtet daher nur Verkaufstransaktionen
+									</p>
+								</div>
+
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="profitfromsales">@Model.Total.Total.Income.ToString("N2")</span> €</div>
+							<hr/>
+							<div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+								Steuerpflichtiges Einkommen
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.Total.TotalTaxed.Income.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-arrow-up fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xl mb-4">
+			<div class="card border-left-danger shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+								Ausgaben
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="profitfromsales">@Model.Total.Total.Expenditures.ToString("N2")</span> €</div>
+							<hr/>
+							<div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+								Steuerrelevante Ausgaben
+							</div>
+							<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="freigrenze">@Model.Total.TotalTaxed.Expenditures.ToString("N2")</span> €</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-solid fa-arrow-down fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xl mb-4">
+			<div class="card border-left-warning shadow h-100 py-2">
+				<div class="card-body">
+					<div class="row no-gutters align-items-center">
+						<div class="col mr-2">
+							<div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+								Gebühren
+							</div>
+							<div class="row no-gutters align-items-center">
+								<div class="col-auto">
+									<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="fee">@Model.Total.Total.Fees.ToString("N2")</span> €</div>
+								</div>
+							</div>
+							<hr>
+							<div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+								steuerrelevante Gebühren
+							</div>
+							<div class="row no-gutters align-items-center">
+								<div class="col-auto">
+									<div class="h5 mb-0 font-weight-bold text-gray-800"><span id="fee">@Model.Total.TotalTaxed.Fees.ToString("N2")</span> €</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-auto">
+							<i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- Pie Chart 1-->
+		<div class="col-xl-6 col-lg-6">
+
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Anteil der steuerpflichtigen Veräußerungen</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-pie pt-4" style="display: grid; justify-items: center;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="pie-chart" style="display: block; height: 253px; width: 326px;" width="652" height="506" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Bar Chart 1-->
+		<div class="col-xl-6 col-lg-6">
+
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Gewinne und Verluste im Vergleich</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="form-switch" style="text-align: right;">
+						<span>Gesamtwerte  <span style="margin-left: 2.7em"><input id="switch-bar-chart" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">Steuerrelevante Werte</span>  </span>
+					</div>
+					<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="bar-chart" style="display: block; height: 253px; width: 326px;" width="652" height="506" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let soldTransactions = {};
+		let unsoldTransactions = {};
+		let taxed = {};
+		let untaxed = {};
+	</script>
+	<h1 id="evaluation-title" class="h3 mb-0 text-gray-800">Nach Kryptowährung</h1>
+	@foreach (var item in Model.TotalByCurrency){
+		if (item.Value.Exists) {
+			<div class="row">
+				<!-- Custom Chart 1-->
+				<div class="col-xl-12 col-lg-7">
+					<div class="card shadow mb-4">
+						<!-- Card Header -->
+						<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+							<h6 class="m-0 font-weight-bold text-primary"><img src="@item.Value.Logo" alt="" width="35" height="35"> @item.Key</h6>
+						</div>
+						<!-- Card Body -->
+						<div class="card-body">
+							<div class="d-flex">
+								<div class="chart-area">
+									<canvas id="custom-chart-@item.Key" class="chartjs-render-monitor"></canvas>
+									<script>
+										soldTransactions["@Html.Raw(item.Key)"] =
+											@Html.Raw(JsonSerializer.Serialize(item.Value.Sold));
+										unsoldTransactions["@Html.Raw(item.Key)"] =
+											@Html.Raw(JsonSerializer.Serialize(item.Value.Unsold));
+										taxed["@Html.Raw(item.Key)"] = @item.Value.TotalTaxed.Profits.ToString(CultureInfo.InvariantCulture);
+										untaxed["@Html.Raw(item.Key)"] = @item.Value.Total.Profits.ToString(CultureInfo.InvariantCulture) - taxed["@Html.Raw(item.Key)"];
+									</script>
+								</div>
+								<div class="chart-area">
+									<canvas id="pie-chart-@item.Key" class="chartjs-render-monitor"></canvas>
+								</div>
+							</div>
+
+							<h5 style="margin-top: 30px">Steuerlich relevante Transaktionen:</h5>
+
+							<table class="table" id="table-@item.Key">
+								<thead>
+								<tr>
+									<th rowspan="2">Menge</th>
+									<th colspan="2">Kauf / Mining / Staking</th>
+									<th colspan="2">Verkauf</th>
+									<th rowspan="2">Gesamtgebühr</th>
+									<th rowspan="2">Gewinn / Verlust</th>
+								</tr>
+								<tr>
+									<th>Datum</th>
+									<th>Preis</th>
+									<th>Datum</th>
+									<th>Preis</th>
+								</tr>
+								</thead>
+								<tbody>
+									@foreach(var transaction in @item.Value.Sold){
+										if (!transaction.IsTaxFree) {
+										<tr>
+											<td>@transaction.SoldAmount</td>
+											<td>@transaction.BuyDate</td>
+											<td>@(transaction.BuyRate * transaction.SoldAmount) €</td>
+											<td>@transaction.SellDate</td>
+											<td>@(transaction.SellRate * transaction.SoldAmount) €</td>
+											<td>@transaction.TotalFee €</td>
+											<td>@transaction.Gain €</td>
+										</tr>
+										}
+									}
+								</tbody>
+								<tfoot>
+									<td>Gesamt</td>
+									<td>-</td>
+									<td>@item.Value.Sold.Sum(x => x.IsTaxFree ? 0.0M : x.BuyRate * x.SoldAmount).ToString("N2")</td>
+									<td>-</td>
+									<td>@item.Value.Sold.Sum(x => x.IsTaxFree ? 0.0M : x.SellRate * x.SoldAmount).ToString("N2")</td>
+									<td>@item.Value.Sold.Sum(x => x.IsTaxFree ? 0.0M : x.TotalFee).ToString("N2")</td>
+									<td>@item.Value.Sold.Sum(x => x.IsTaxFree ? 0.0M : x.Gain).ToString("N2")</td>
+								</tfoot>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	}
+</div>
+
+
+@section Scripts {
+	<!--PDF Generation-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js" integrity="sha384-NaWTHo/8YCBYJ59830LTz/P4aQZK1sS0SneOgAvhsIl3zBu8r9RevNg5lHCHAuQ/" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/1.5/canvg.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.js"></script>
+	<!--Select2 Dropdown-->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+	<script>$('#yearList').select2();</script>
+	<script>applyPlugin(jsPDF)</script>
+	<script src="~/js/taxevaluationNew.js" asp-append-version="true"></script>
+	<script src="~/js/pdfgeneration.js" asp-append-version="true"></script>
+}
+
+@section Styles {
+
+	<link href="@Url.Content("~/css/taxrecommendation.css")" rel="stylesheet" type="text/css"/>
+	<link href="@Url.Content("~/css/colors.css")" rel="stylesheet" type="text/css"/>
+	<link rel="stylesheet" href="~/css/taxevaluation.css" asp-append-version="true"/>
+}
+
+<img id="hidden-logo" src="/images/logo_rescaled_for_pdfrecolored.png" style="display: none"></img>

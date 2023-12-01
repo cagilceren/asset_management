@@ -1,0 +1,55 @@
+@using NACTAM.ViewModels;
+
+@{
+	ViewData["Sidebar"] = "Empty";
+	ViewData["Header"] = "Empty";
+}
+
+
+@model LoginViewModel
+
+<div class="container">
+	@if (ViewData.ModelState[""] != null && ViewData.ModelState[""].Errors.Count > 0) {
+		<div class="alert alert-danger">@Html.ValidationSummary()</div>
+	}
+	<div class="card o-hidden border-0 shadow-lg">
+		<div class="card-body p-0" style="display: grid; justify-content: center;">
+			<form asp-action="Login" method="post" class="user" id="login-form" style="width: 25vw">
+				<div class="text-center">
+					<h1 class="h4 text-gray-900 my-4">Login</h1>
+				</div>
+				<div class="form-group" style="margin: 30px">
+					<input type="username" asp-for="UserName" class="form-control form-control-user"
+						id="username" placeholder="Benutzername...">
+					<span asp-validation-for="UserName" class="text-danger"></span>
+				</div>
+				<div class="form-group" style="margin: 30px">
+					<input type="password" asp-for="Password" class="form-control form-control-user"
+						id="password" placeholder="Password...">
+					<span asp-validation-for="Password" class="text-danger"></span>
+				</div>
+				<hr>
+
+				<div class="custom-control custom-checkbox small">
+					<input type="checkbox" class="custom-control-input" id="customCheck">
+					<label class="custom-control-label" for="customCheck">Remember
+						Me</label>
+				</div>
+
+				<button class="btn btn-primary btn-user btn-block" type="submit">Login</button>
+			</form>
+
+			<div class="text-center">
+				<a class="small show-forgot-password" href="javascript:showForgotPassword()">Forgot Password?</a>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial"></partial>
+}

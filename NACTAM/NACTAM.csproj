@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<Target Name="NpmInstall" Inputs="wwwroot/package.json" Outputs="wwwroot/node_modules/.install-stamp">
+		<!--
+		Use npm install or npm ci depending on RestorePackagesWithLockFile value.
+		Uncomment the following lines if you want to use this feature:
+
+		<PropertyGroup>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+		</PropertyGroup>
+		-->
+		<Exec Command="npm ci" Condition="'$(RestorePackagesWithLockFile)' == 'true'" WorkingDirectory="./wwwroot/" />
+		<Exec Command="npm install" Condition="'$(RestorePackagesWithLockFile)' != 'true'" WorkingDirectory="./wwwroot/" />
+
+		<!-- Write the stamp file, so incremental builds work -->
+		<Touch Files="wwwroot/node_modules/.install-stamp" AlwaysCreate="true" />
+	</Target>
+	<Target Name="NpmRunBuild" DependsOnTargets="NpmInstall" BeforeTargets="BeforeBuild">
+		<Exec Command="npm run build" WorkingDirectory="./wwwroot/" />
+	</Target>
+
+	<ItemGroup>
+		<Content Include="Persistence\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="MailKit" Version="4.1.0" />
+		<PackageReference Include="CsvHelper" Version="16.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.8">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.8" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
+		<PackageReference Include="SkiaSharp" Version="2.88.3" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.3" />
+		<PackageReference Include="Svg.Skia" Version="1.0.0" />
+		<PackageReference Include="Z.EntityFramework.Extensions" Version="7.22.4" />
+		<PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="7.22.4" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<_ContentIncludedByDefault Remove="wwwroot\output\css\deps.css" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-brands-400-L56FXN36.ttf" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-brands-400-SIIAGDBB.woff2" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-regular-400-AKWU76I6.woff2" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-regular-400-K4FBMWYG.ttf" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-solid-900-BNOK755N.ttf" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-solid-900-H2XJQV6A.woff2" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-v4compatibility-MIE46ALS.woff2" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\fa-v4compatibility-SLOOKL4I.ttf" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\assets.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\charthelper.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\dashboard.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\easteregg.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\landingpage.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\notifications.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\site.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\taxevaluation.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\taxrecommendation.js" />
+		<_ContentIncludedByDefault Remove="wwwroot\output\js\transactions.js" />
+	</ItemGroup>
+</Project>

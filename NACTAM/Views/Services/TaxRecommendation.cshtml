@@ -1,0 +1,263 @@
+<!-- author: Cagil Ceren Aslan -->
+
+@using System.Globalization
+@using System.Text.Json
+@model NACTAM.ViewModels.TaxRecommendation.TaxRecommendationViewModel
+@{
+	ViewData["Title"] = "Steuerliche Empfehlung";
+}
+
+@section Styles {
+	<link href="@Url.Content("~/css/taxrecommendation.css")" rel="stylesheet" type="text/css"/>
+	<link href="@Url.Content("~/css/colors.css")" rel="stylesheet" type="text/css"/>
+}
+
+@{
+	int indexRow = 0;
+	string hiddenChildRow;
+	string taxCondition;
+	string germanTaxCondition;
+	string lossColorTransaction;
+	string profitColorTransaction;
+	string assetTippColor = "";
+	string expectedGain;
+	string tippsTransaction;
+	string tippsAsset;
+	CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+}
+
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<!-- Page Heading -->
+	<h1 class="h3 mb-2 text-gray-800">@ViewData["Title"]</h1>
+
+	<!-- Profit Charts Content -->
+	<h1 class="h5 mb-4 text-gray-800">Übersicht der steuerrelaventen Gewinne</h1>
+	<p class="text-gray-800 mb-5">Bitte tippen Sie die Höhe Ihres gesamten Gewinns <strong>als eine ganze Zahl in Euro</strong> aus nicht-Krypto Verkäufen und nicht-Krypto sonstigen Leistungen ein, um einen besseren Überblick über Ihren Steuerstatus zu erhalten.</p>
+	<!-- Input Area for Profit Charts -->
+	<form asp-controller="Services" asp-action="TaxRecommendationSaleProfit" method="post">
+		<div class="row">
+			<div class="col-xl-6 col-lg-6">
+				<div class="form-group row">
+					<div class="col-sm-4 mb-3 mb-sm-0 info">
+						<p class="text-gray-700">Gewinn aus <strong>nicht-Krypto Verkäufen</strong> in&nbsp;€: <i class="fas fa-info-circle"></i></p>
+						<p class="info-text">Wenn der Gesamtgewinn von allen Ihren Verkäufen 600€ überschreitet, wird der Gesamtgewinn steuerpflichtig.</p>
+					</div>
+					<div class="col-sm-4">
+						<input type="text" class="form-control form-control-user" asp-for="NonCryptoSaleProfit" id="NonCryptoSaleProfit" value="@Model.NonCryptoSaleProfit">
+					</div>
+					<div class="col-sm-4 mb-sm-0">
+						<button type="submit" class="btn btn-primary btn-user btn-block">Bestätigen</button>
+					</div>
+				</div>
+				<hr>
+			</div>
+
+			<div class="col-xl-6 col-lg-6">
+				<div class="form-group row">
+					<div class="col-sm-4 mb-3 mb-sm-0 info">
+						<p class="text-gray-700">Gewinn aus <strong>nicht-Krypto sonstigen Leistungen</strong> in&nbsp;€: <i class="fas fa-info-circle"></i></p>
+						<div class="info-text">Wenn der Gesamtgewinn von allen sonstigen Leistungen außer Verkäufen 256€ überschreitet, wird der Gesamtgewinn steuerpflichtig.</div>
+					</div>
+					<div class="col-sm-4">
+						<input type="text" class="form-control form-control-user" asp-for="NonCryptoOthersProfit" id="NonCryptoOthersProfit" value="@Model.NonCryptoOthersProfit">
+					</div>
+					<div class="col-sm-4 mb-sm-0">
+						<button type="submit" class="btn btn-primary btn-user btn-block">Bestätigen</button>
+					</div>
+				</div>
+				<hr>
+			</div>
+		</div>
+	</form>
+
+	<!-- Donut -->
+	<div class="row">
+		<!-- Donut Chart for Profit from Sale -->
+		<div class="col-xl-6 col-lg-6">
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Gesamtgewinn aus Verkäufen in €</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="saleProfit" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Donut Chart for Profit from Others -->
+		<div class="col-xl-6 col-lg-6">
+			<div class="card shadow mb-4">
+				<!-- Card Header -->
+				<div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Gesamtgewinn aus sonstigen Leistungen in €</h6>
+				</div>
+				<!-- Card Body -->
+				<div class="card-body">
+					<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+						<canvas id="othersProfit" class="chartjs-render-monitor"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+		<hr>
+	</div>
+
+
+	<!-- DataTables for Tax Recommendation-->
+	<h1 class="h5 mb-4 text-gray-800">Gewinnoptimierung Empfehlungen</h1>
+	<p class="text-gray-700 mb-4">Sie können unten alle Transaktionen und Tipps für Ihre Gewinnoptimierung sehen.</p>
+	<div class="card shadow mb-4">
+		<div class="card-body">
+			<div class="row">
+				<div class="col-sm-12 col-md-9"></div>
+				<div id="filter" class="col-sm-12 col-md-3"></div>
+			</div>
+			<div class="table-responsive">
+				<table id="tax-recommendation-table" class="table table-bordered" width="100%" cellspacing="0">
+					<thead>
+						<tr>
+							<th></th>
+							<th>Asset</th>
+							<th>Verkaufbare Coinmenge</th>
+							<th>Tipps für Gewinnoptimierung</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var asset in @Model.RecommendationData.AssetsForTable)
+						{
+							hiddenChildRow = "transactions" + indexRow;
+
+							@if (asset.Transactions.Any(t => t.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxFreeTipp)) {
+								tippsAsset = "Es gibt Coins, durch deren Verkauf Sie steuerfreien Gewinn machen.";
+								assetTippColor = "profit";
+							} else if(@Model.SaleProfitChart.FreeLimitSaleProfit > 0 && asset.Transactions.Any(t => t.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxLiableTipp)) {
+								tippsAsset = "Sie sind noch unter der Freigrenze. Es gibt Coins, die Sie verkaufen können, ohne den Gewinn zu versteuern.";
+								assetTippColor = "profit";
+							} else if((@Model.SaleProfitChart.FreeLimitSaleProfit <= 0) && asset.Transactions.Any(t => t.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.lossTaxLiableTipp)) {
+								tippsAsset = "Es gibt Coins, durch deren Verkauf Sie Verlust machen. Dieser wird aber von Ihrem steuerpflichtigen Gewinn abgezogen.";
+								assetTippColor = "profit";
+							} else if((@Model.SaleProfitChart.FreeLimitSaleProfit <= 0) && asset.Transactions.Any(t => t.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxLiableTipp)) {
+								tippsAsset = "Es gibt Coins, durch deren Verkauf Sie Gewinn machen. Dieser wird aber versteuert.";
+								assetTippColor = "loss";
+							} else {
+								tippsAsset = "Sie machen Verlust, wenn Sie diese Coins verkaufen.";
+								assetTippColor = "loss";
+							}
+
+							<tr id="@indexRow">
+								<td></td>
+								<td>@asset.CryptoCurrency</td>
+								<td>@asset.AvaliableCoinAmount.ToString("N2")</td>
+								<td class="@assetTippColor">@tippsAsset</td>
+								<div class="hidden" id=@hiddenChildRow>
+									<p class="text-gray-800 mb-5">Transaktionen:</p>
+									<div class="table border-left-secondary" style="margin-left: 3rem;">
+										<div class="table-row">
+											<div class="table-header">Datum</div>
+											<div class="table-header">Steuerstatus</div>
+											<div class="table-header">Kurs beim Kauf</div>
+											<div class="table-header">Aktueller Kurs</div>
+											<div class="table-header">Verkaufbare Coinmenge</div>
+											<div class="table-header">Gewinn/Verlust beim Verkauf (€)</div>
+											<div class="table-header">Fälligkeitsdatum</div>
+											<div class="table-header">Tipps</div>
+										</div>
+										@foreach (var transaction in asset.Transactions)
+										{
+											lossColorTransaction = (transaction.IsTaxFree && (transaction.ExpectedGain < 0) ||
+												(!transaction.IsTaxFree && (transaction.ExpectedGain > 0) && (@Model.SaleProfitChart.FreeLimitSaleProfit <= 0)) ||
+												(!transaction.IsTaxFree && (transaction.ExpectedGain < 0) && (@Model.SaleProfitChart.FreeLimitSaleProfit > 0))
+												) ? "loss" : "";
+											profitColorTransaction = ((transaction.IsTaxFree && (transaction.ExpectedGain > 0)) ||
+												(!transaction.IsTaxFree && (transaction.ExpectedGain < 0) && (@Model.SaleProfitChart.FreeLimitSaleProfit <= 0)) ||
+												(!transaction.IsTaxFree && (transaction.ExpectedGain > 0) && (@Model.SaleProfitChart.FreeLimitSaleProfit > 0))
+												) ? "profit" : "";
+											taxCondition = transaction.IsTaxFree ? "tax-free" : "tax-liable";
+											expectedGain = transaction.ExpectedGain < 0 ? "loss" : "profit";
+											germanTaxCondition = transaction.IsTaxFree ? "steuerfrei" : "steuerpflichtig";
+
+											@if (transaction.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.lossTaxLiableTipp) {
+												tippsTransaction = "Beim Verkauf dieser Coins wird Verlust gemacht. Dieser wird aber von Ihrem steuerrelevanten Gewinn abgezogen.";
+											} else if (transaction.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxLiableTipp && (@Model.SaleProfitChart.FreeLimitSaleProfit <= 0)) {
+												tippsTransaction = "Ihre Freigrenze ist bereits überschritten. Der Gewinn aus dem Verkauf dieser Coins zählt zum zu versteuernden Gesamtgewinn.";
+											} else if (transaction.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxLiableTipp && (@Model.SaleProfitChart.FreeLimitSaleProfit > 0)) {
+												tippsTransaction = "Beim Verkauf dieser Coins muss der Gewinn nicht versteuert werden, wenn der Gewinn nicht mehr als " + @Model.SaleProfitChart.FreeLimitSaleProfit + "€ beträgt.";
+											} else if (transaction.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.lossTaxFreeTipp) {
+												tippsTransaction = "Beim Verkauf dieser Coins machen Sie Verlust.";
+											} else if (transaction.Tipps == @NACTAM.ViewModels.TaxRecommendation.RecommendationData.TippsEnum.profitTaxFreeTipp) {
+												tippsTransaction = "Beim Verkauf dieser Coins machen Sie steuerfreien Gewinn.";
+											} else {
+												tippsTransaction = "";
+											}
+
+											@if (asset.CryptoCurrency == transaction.CryptoCurrency)
+											{
+												<div class="table-row">
+													<div class="table-cell">@transaction.Date</div>
+													<div class="table-cell @taxCondition">@germanTaxCondition</div>
+													<div class="table-cell">@transaction.Rate.ToString("N2")</div>
+													<div class="table-cell">@transaction.CurrentRate.ToString("N2")</div>
+													<div class="table-cell">@transaction.RemainingAmount.ToString("N2")</div>
+													<div class="table-cell @expectedGain">@transaction.ExpectedGain.ToString("N2") €</div>
+													<div class="table-cell">@transaction.DueDate.ToString().Split(" ")[0]</div>
+													<div class="table-cell @lossColorTransaction@profitColorTransaction">@tippsTransaction</div>
+												</div>
+											}
+										}
+									</div>
+								</div>
+							</tr>
+							++indexRow;
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<hr>
+
+	<!-- List of All Assets as Chart.js -->
+	<h1 class="h5 mb-4 text-gray-800">Übersicht über Haltefristen</h1>
+	<p class="text-gray-700 mb-4">Unten können Sie für alle Ihre Assets sehen, wie viele Coins wann steuerfrei werden.</p>
+	<div class="row">
+		@foreach (var dataSet in @Model.RecommendationData.ChartDataSets)
+		{
+			<!-- Donut Charts -->
+			<div class="col-xl-6 col-lg-6">
+				<div class="card shadow mb-4">
+					<!-- Card Header -->
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">@dataSet.ChartName</h6>
+					</div>
+					<!-- Card Body -->
+					<div class="card-body">
+						<div class="chart-pie pt-4"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+							<canvas id="@dataSet.ChartName" class="chartjs-render-monitor"></canvas>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+
+</div>
+
+
+@section Scripts {
+	<script type="text/javascript">
+		var saleProfitChartData = [@Model.SaleProfitChart.NonCryptoSaleProfit.ToString(CultureInfo.InvariantCulture), @Model.SaleProfitChart.CryptoSaleProfit.ToString(CultureInfo.InvariantCulture), @Model.SaleProfitChart.FreeLimitSaleProfit.ToString(CultureInfo.InvariantCulture)];
+		var othersProfitChartData = [@Model.OthersProfitChart.NonCryptoOthersProfit.ToString(CultureInfo.InvariantCulture), @Model.OthersProfitChart.MiningProfit.ToString(CultureInfo.InvariantCulture), @Model.OthersProfitChart.StakingProfit.ToString(CultureInfo.InvariantCulture), @Model.OthersProfitChart.FreeLimitOthersProfit.ToString(CultureInfo.InvariantCulture)];
+		var isInFreeLimitSale = @Model.SaleProfitChart.FreeLimitSaleProfit.ToString(CultureInfo.InvariantCulture) > 0;
+		var isInFreeLimitOther = @Model.OthersProfitChart.FreeLimitOthersProfit.ToString(CultureInfo.InvariantCulture) > 0;
+		var assetsChartDataSetList = @Html.Raw(JsonSerializer.Serialize(Model.RecommendationData.ChartDataSets, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true }));
+	</script>
+	<script src="~/js/taxrecommendation.js" asp-append-version="true"></script>
+}
+

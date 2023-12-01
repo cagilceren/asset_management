@@ -1,0 +1,56 @@
+<!-- Sidebar -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordion-sidebar">
+
+	<!-- Sidebar - Brand -->
+
+	<a class="sidebar-brand d-flex align-items-center justify-content-center" asp-action="Index" asp-controller="Home" >
+		<div class="sidebar-brand-icon">
+			<img width="50" src="@Url.Content("~/images/logo.svg")" class="logo-small" alt="">
+		</div>
+		<div class="sidebar-brand-text mx-3">NACTAM</div>
+	</a>
+
+	<!-- Divider -->
+	<hr class="sidebar-divider my-0">
+
+	<!-- Heading -->
+	<div class="sidebar-heading"></div>
+
+	<!-- Nav Item - Assets Menu -->
+	<li class="nav-item">
+		<a id="link1" class="nav-link" asp-area="" asp-controller="Advisor" asp-action="ExtendedInsightAssets">
+			<i class="fa-solid fa-users"></i>
+			<span>Assets</span>
+		</a>
+		<div id="collapse-utilities" class="collapse" aria-labelledby="heading-utilities"
+			data-parent="#accordion-sidebar">
+			<div class="bg-white py-2 collapse-inner rounded">
+				<h6 class="collapse-header">Custom Utilities:</h6>
+				<a class="collapse-item" href="utilities-color.html">Colors</a>
+				<a class="collapse-item" href="utilities-border.html">Borders</a>
+				<a class="collapse-item" href="utilities-animation.html">Animations</a>
+				<a class="collapse-item" href="utilities-other.html">Other</a>
+			</div>
+		</div>
+	</li>
+
+	<!-- Nav Item - Transactions Menu -->
+	<li class="nav-item">
+
+		<a id="link2" class="nav-link" asp-area="" asp-controller="Advisor" asp-action="ExtendedInsightTransactions">
+			<i class="fa-solid fa-gear"></i>
+			<span>Transaktionen</span>
+		</a>
+		<div id="collapse-utilities" class="collapse" aria-labelledby="heading-utilities"
+			data-parent="#accordion-sidebar">
+			<div class="bg-white py-2 collapse-inner rounded">
+				<h6 class="collapse-header">Custom Utilities:</h6>
+				<a class="collapse-item" href="utilities-color.html">Colors</a>
+				<a class="collapse-item" href="utilities-border.html">Borders</a>
+				<a class="collapse-item" href="utilities-animation.html">Animations</a>
+				<a class="collapse-item" href="utilities-other.html">Other</a>
+			</div>
+		</div>
+	</li>
+</ul>
+

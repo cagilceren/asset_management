@@ -1,0 +1,73 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<!-- Page Heading -->
+	<h1 class="h3 mb-2 text-gray-800">Meine Steuerberater</h1>
+
+	<!-- DataTales Example -->
+	<div class="card shadow mb-4">
+		<div class="card-body">
+			<div class="d-flex justify-content-end" style="margin-bottom: 10px;">
+				@if(@Model.RequestNumber == 0){
+					<button class="btn btn-warning rounded btn-faded disabled">Keine Anfragen</button>
+				}else{
+					<form method="get" asp-action="Requests">
+						<button class="btn btn-warning rounded">@Model.RequestNumber Anfragen</button>
+					</form>
+				}
+			</div>
+			<div class="table-responsive">
+				<table id="myUser-table" class="table table-bordered" width="100%" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th style="width: 180px;">Einsichtsart</th>
+							<th style="width: 220px;"></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(var allowance in @Model.Insights){
+							<tr>
+								<td>
+									<div class="col text-left">
+										<span class="label label-default">@allowance.Advisor.FirstName @allowance.Advisor.LastName</span>
+									</div>
+								</td>
+								<td>
+									<div class="col text-center">
+										@if(allowance.Status == InsightStatus.Assigned || allowance.Status == InsightStatus.SimpleUnaccepted){
+											<span class="label label-default">Keine</span>
+										}else if(allowance.Status == InsightStatus.Simple || allowance.Status == InsightStatus.ExtendedUnaccepted){
+											<span class="label label-default">Einfach</span>
+										}else if(allowance.Status == InsightStatus.Extended){
+											<span class="label label-default">Erweitert</span>
+										}
+									</div>
+								</td>
+								<td>
+									<div class="col text-center">	
+										<div class="btn-group" role="group">
+											@if(allowance.Status == InsightStatus.Extended || allowance.Status == InsightStatus.ExtendedUnaccepted || allowance.Status == InsightStatus.Simple){
+												<form method="post" asp-action="RemoveInsight" asp-route-userName="@allowance.Advisor.UserName">
+													<button class="btn btn-danger rounded" style="width: 200px">Einsicht entfernen</button>
+												</form>
+											}
+										</div>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<style>
+	.btn-faded {
+		opacity: 0.6; /* Verringert die Deckkraft des Buttons */
+		filter: grayscale(50%); /* Wendet eine Graustufeneffekt an */
+	}
+</style>

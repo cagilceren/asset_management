@@ -1,0 +1,155 @@
+@using NACTAM.ViewModels
+@using Microsoft.AspNetCore.Identity
+
+@model UserSettingsViewModel
+
+@inject UserManager<User> UserManager
+
+@{
+	var user = await UserManager.GetUserAsync(User);
+	ViewData["Sidebar"] = user.DiscriminatorValue == "PrivatePerson" ? "Sidebar" : user.DiscriminatorValue == "TaxAdvisor" ? "AdvisorSidebar" : "Empty";
+}
+
+<style>
+#settings-form {
+	display: grid;
+	grid-template-areas:
+		"personal profile-pic" 
+		"personal login-data " 
+		".    submit   ";
+	gap: 25px;
+	padding: 20px;
+}
+
+@@media only screen and (max-width: 600px) {
+	#settings-form {
+		grid-template-areas:
+			"personal"
+			"profile-pic" 
+			"login-data" 
+			"submit";
+	}
+}
+</style>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<h1 class="h3 mb-2 text-gray-800">Account</h1>
+
+	<div class="row">
+		@if (ViewData.ModelState[""] != null && ViewData.ModelState[""].Errors.Count > 0) {
+			<div class="alert alert-danger">@Html.ValidationSummary()</div>
+		}
+		<form id="settings-form" asp-action="Settings" method="post" enctype="multipart/form-data">
+			<div class="card mb-4" style="grid-area: personal">
+				<div class="card-header">Persönliche Daten</div>
+				<div class="card-body">
+					<input class="form-control" type="hidden" asp-for="CurrentUser.Id">
+					<!-- Form Row-->
+					<div class="row gx-3 mb-3">
+						<!-- Form Group (first name)-->
+						<div class="col-md-6 form-group">
+							<label class="small mb-1" asp-for="CurrentUser.FirstName">Vorname</label>
+							<input class="form-control" type="text" placeholder="Geben Sie Ihren Vorname ein" asp-for="CurrentUser.FirstName">
+							<span asp-validation-for="CurrentUser.FirstName" class="text-danger"></span>
+						</div>
+						<!-- Form Group (last name)-->
+						<div class="col-md-6 form-group">
+							 <label class="small mb-1" asp-for="CurrentUser.LastName">Nachname</label>
+							 <input class="form-control" type="text" placeholder="Geben Sie Ihren Nachname ein" asp-for="CurrentUser.LastName">
+							<span asp-validation-for="CurrentUser.LastName" class="text-danger"></span>
+						</div>
+					</div>
+					<!-- Form Group (email address)-->
+					<div class="mb-3 form-group">
+						<label class="small mb-1" for="CurrentUser.Email">E-Mail Adresse</label>
+						<input class="form-control" type="email" placeholder="Geben Sie Ihre E-Mail Adresse ein" asp-for="CurrentUser.Email">
+						<span asp-validation-for="CurrentUser.Email" class="text-danger"></span>
+					</div>
+					<!-- Form Group (phone number)-->
+					<div class="mb-3 form-group">
+						<label class="small mb-1" for="CurrentUser.PhoneNumber">Telefonnummer</label>
+						<input class="form-control" type="tel" placeholder="Geben Sie Ihre Telefonnummer ein" asp-for="CurrentUser.PhoneNumber">
+						<span asp-validation-for="CurrentUser.PhoneNumber" class="text-danger"></span>
+					</div>
+					<!-- Form Row		-->
+					<div class="row gx-3 mb-3">
+						<!-- Form Group (street)-->
+						<div class="col-md-6 form-group">
+							<label class="small mb-1"  asp-for="CurrentUser.StreetName">Straße</label>
+							<input class="form-control" type="text" placeholder="Geben Sie Ihre Straße ein" asp-for="CurrentUser.StreetName">
+							<span asp-validation-for="CurrentUser.StreetName" class="text-danger"></span>
+						</div>
+						<!-- Form Group (number)-->
+						<div class="col-md-6 form-group">
+							<label class="small mb-1" asp-for="CurrentUser.HouseNumber">Hausnummer</label>
+							<input class="form-control" type="text" placeholder="Geben Sie Ihre Hausnummer ein" asp-for="CurrentUser.HouseNumber">
+							<span asp-validation-for="CurrentUser.HouseNumber" class="text-danger"></span>
+						</div>
+					</div>
+
+					<!-- Form Row-->
+					<div class="row gx-3 mb-3">
+						<!-- Form Group (zip)-->
+						<div class="col-md-6 form-group">
+							<label class="small mb-1" asp-for="CurrentUser.ZIP">Postleitzahl</label>
+							<input class="form-control" type="text" placeholder="Geben Sie Ihre PLZ ein" asp-for="CurrentUser.ZIP">
+							<span asp-validation-for="CurrentUser.ZIP" class="text-danger"></span>
+						</div>
+						<!-- Form Group (place)-->
+						<div class="col-md-6 form-group">								
+							<label class="small mb-1" asp-for="CurrentUser.City">Ort</label>
+							<input class="form-control" type="text" placeholder="Geben Sie Ihren Ort ein" asp-for="CurrentUser.City">
+							<span asp-validation-for="CurrentUser.City" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="row gx-3 mb-3">
+						<!-- Form Group (zip)-->
+						<div class="col-md-6 form-group">
+							<label class="small mb-1" asp-for="CurrentUser.EmailNotification">Email Benachrichtung</label>
+							<input type="checkbox" asp-for="CurrentUser.EmailNotification">
+							<span asp-validation-for="CurrentUser.EmailNotification" class="text-danger"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="card mb-4">
+				<div class="card-header">Profilbild</div>
+				<div class="card-body">
+					<div>
+						<!-- Profile picture image-->
+						<img id="display-profile" width="100" height="100" class="img-account-profile rounded-circle mb-2" src="@Url.Action("ProfilePicture", "Home" , new { UserName=Model.CurrentUser.UserName })" alt="<empty profile picture D:>">
+						<!-- Profile picture upload button-->
+						<input class="form-control" type="file" asp-for="Icon" onchange="readImage(this, 'display-profile')">
+						<span asp-validation-for="Icon" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Profile picture card-->
+			<div class="card mb-4 mb-xl-0">
+				<div class="card-header">Logindaten</div>
+				<div class="card-body text-center">
+					<label class="small mb-1" asp-for="CurrentUser.UserName">Username</label>
+					<input class="form-control" type="text" placeholder="Geben Sie Ihren Nutzernamen ein" asp-for="CurrentUser.UserName">
+					<span asp-validation-for="CurrentUser.UserName" class="text-danger"></span>
+					<a class="btn btn-primary" style="margin-bottom: 10px" type="button" href="@Url.Action("PasswordUpdate", "Home")">Passwort ändern</a>
+				</div>
+			</div>
+			<input id="save-button" class="btn btn-primary" type="submit" style="justify-self: start">
+		</form>
+	</div>	
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial"></partial>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.dirtyforms/2.0.0/jquery.dirtyforms.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+$(function() {
+	$("#settings-form").dirtyForms({preventLeaving: true});
+});
+
+</script>
+}

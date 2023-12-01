@@ -1,0 +1,177 @@
+@{
+    ViewData["Sidebar"] = "AdvisorSidebar";
+}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<h1 class="h3 mb-2 text-gray-800">Alle Kunden</h1>
+
+	<div class="card shadow mb-4">
+		<div class="card-body">
+			<div class="table-responsive">
+				@if (!string.IsNullOrEmpty(ViewBag.Error)){
+					<div class="alert alert-danger" role="alert">
+						<span class="label">@ViewBag.Error</span>
+					</div>
+    			}
+				<table id="myUser-table" class="table table-bordered" width="100%" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Kunde</th>
+							<th>Andere Berater</th>
+						</tr>
+					</thead>
+					<tbody>
+
+						@foreach (var user in @Model.MyUsers){
+						  <tr>
+							<td>
+								<div class="row">
+									<div class="col text-left">
+										@if(@user.AddressSet()){
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setFullContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@user.Address.StreetName', '@user.Address.HouseNumber', '@user.Address.ZIP', '@user.Address.City', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}else{
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setBasicContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}
+									</div>
+									<div class="col text-right">
+										<div class="btn-group" role="group">
+                              				<form method="post" asp-action="RevokeUser" asp-route-userName=@user.UserName>
+					                      		<button  class="btn btn-danger rounded" style="width: 200px">Zuteilung entfernen</button>
+				                      		</form>
+										</div>
+									</div>
+								</div>
+							</td>
+							<td class="text-center" style="width: 80px;">
+            					<button type="button" class="btn btn-secondary open-popup" id="open-popup" style="width: 65px" data-username="@user.UserName" >@Model.GetNumberOfAdvisors(user)</button>
+      						</td>
+						</tr>
+
+			}
+			@foreach (var user in @Model.AllOtherUsers){
+			  <tr>
+							<td>
+								<div class="row">
+									<div class="col text-left">
+										@if(@user.AddressSet()){
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setFullContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@user.Address.StreetName', '@user.Address.HouseNumber', '@user.Address.ZIP', '@user.Address.City', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}else{
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setBasicContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}
+          							</div>
+          							<div class="col text-right">
+            							<div class="btn-group" role="group">
+                              			<form method="post" asp-action="AssignUser" asp-route-userName=@user.UserName>
+					                      	<button  class="btn btn-success rounded" style="width: 200px">Mir zuteilen</button>
+				                      	</form>
+            							</div>
+          							</div>
+        						</div>
+      						</td>
+							<td class="text-center" style="width: 80px;">
+            					<button type="button" class="btn btn-secondary open-popup" id="open-popup" style="width: 65px" data-username="@user.UserName">@Model.GetNumberOfAdvisors(user)</button>
+      						</td>
+						</tr>
+            }
+            
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Other Advisors Pop Up div -->
+
+<div id="otherAdvisorsPopUpDiv"></div>
+
+
+<!-- Contact Details Pop Up View-->
+
+<div class="modal fade" id="contactDetails" tabindex="-1" role="dialog" aria-labelledby="popupModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+    	<div class="modal-content">
+      		<div class="modal-header">
+        		<h5 class="modal-title" id="popupModalLabel">Persönliche Daten</h5>
+        		<button type="button" class="close" data-dismiss="modal" aria-label="Schließen">
+          			<span aria-hidden="true">&times;</span>
+        		</button>
+      		</div>
+      		<div class="modal-body">
+				<div class="d-flex text-black">
+  					<div class="flex-shrink-0">
+    					<img id="profile-image" src=""
+      					alt="No Image" class="img-fluid"
+      					style="width: 199px; border-radius: 10px;">
+  					</div>
+  					<div class="flex-grow-1 ms-3">
+    					<h5 class="mb-0" id="label-name">Name</h5>
+						<p class="mb-0 pb-0" style="color: #2b2a2a; font-size: 14px;" id="label-email">Email</p>
+    					<p class="mb-1 pb-0" style="color: #2b2a2a; font-size: 14px;" id="label-mobile">Mobile</p>
+						<div class="justify-content-start rounded-3 p-2 mb-1" style="background-color: #efefef;" id="div-address">
+      						<div>
+        						<p class="small text-muted mb-0">Adresse</p>
+        						<p class="mb-0" id="label-street">Street Nr</p>
+        						<p class="mb-0" id="label-city">ZIP City</p>
+      						</div>
+    					</div>
+    					<div class="d-flex pt-1">
+  							<a href="mailto:noemailgiven" id="button-sendEmail" class="flex-grow-1 pr-1" style="text-decoration: none;">
+   			 					<button type="button" class="btn btn-primary btn-block">E-Mail verfassen</button>
+ 	 						</a>
+  							<a href="tel:nonumbergiven" id="button-call" class="flex-grow-2 pl-1" style="text-decoration: none;">
+    							<button class="btn btn-success btn-block">Anrufen</button>
+  							</a>
+						</div>
+  					</div>
+				</div>
+  			</div>
+		</div>     			
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+  	function setFullContactDetails(firstName, lastName, email, phoneNumber, streetName, houseNumber, zip, city, image) {
+		document.getElementById("div-address").classList.add("d-flex");
+		document.getElementById("label-name").textContent = firstName + " " + lastName;
+		document.getElementById("label-email").textContent = email;
+		document.getElementById("label-mobile").textContent = phoneNumber;
+		document.getElementById("label-street").textContent = streetName + " " + houseNumber;
+		document.getElementById("label-city").textContent = zip + " " + city
+		document.getElementById("button-sendEmail").setAttribute('href', "mailto:" + email);
+		document.getElementById("button-call").setAttribute('href', "tel:" + phoneNumber);
+		document.getElementById("profile-image").src = image;
+  	}
+	
+  	function setBasicContactDetails(firstName, lastName, email, phoneNumber, image) {
+		document.getElementById("div-address").classList.add("d-none");
+		document.getElementById("label-name").textContent = firstName + " " + lastName;
+		document.getElementById("label-email").textContent = email;
+		document.getElementById("label-mobile").textContent = phoneNumber;
+		document.getElementById("button-sendEmail").setAttribute('href', "mailto:" + email);
+		document.getElementById("button-call").setAttribute('href', "tel:" + phoneNumber);
+		document.getElementById("profile-image").src = image;
+  	}
+
+	$(document).ready(function() {
+        $('.open-popup').click(function() {
+            var userName = $(this).data('username');
+
+            $.ajax({
+                url: '/Advisor/OtherTaxAdvisors',
+                data: { userName: userName },
+                type: 'GET',
+                success: function(response) {
+                    $('#otherAdvisorsPopUpDiv').html(response);
+                    $('#otherTaxAdvisorPopUp').modal('show');
+                }
+            });
+        });
+    });
+
+</script>

@@ -1,0 +1,98 @@
+@{
+    ViewData["Sidebar"] = "Empty";
+}
+
+@if (ViewData["Error"] != null && @Model != null){
+	<div class="alert alert-danger">
+		@ViewData["Error"]
+	</div>
+}
+<div class="col-md-1 mb-4" style="margin-left: auto">
+	<a href="/Admin/CreateUser" role="button" class="btn btn-warning btn-circle" title="Hinzufügen">
+		<span class="icon b">
+			<i class="fas fa-plus"></i>
+		</span>
+	</a>
+</div>
+<div class="card o-hidden border-0 shadow-lg m-5">
+	<div class="card-body p-0">
+		<div class="card-header py-3">
+			<h6 class="m-0 font-weight-bold text-primary">Nutzerübersicht</h6>
+		</div>
+		<div class="p-4">
+			<table class="table" id="transaction-table">
+				<thead>
+				<tr>
+					<th>Id</th>
+					<th>Nutzername</th>
+					<th>Nutzertyp</th>
+					<th>vollständiger Name</th>
+					<th>Email</th>
+					<th>Aktionen</th>
+				</tr>
+				</thead>
+				<tbody>
+				@foreach (var item in @Model.Users)
+				{
+					<tr>
+						<td>@item.Id</td>
+						<td>@item.UserName</td>
+						<td>@item.DiscriminatorValue</td>
+						<td>@item.LastName @item.FirstName</td>
+						<td>@item.Email</td>
+						<td>
+							<div class="row">
+								<div class="col-sm-6">
+									<a type="submit" asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-info btn-circle">
+										<span class="icon">
+											<i class="fas fa-edit"></i>
+										</span>
+									</a>
+								</div>
+								<div class="col-sm-6">
+									 <button type="button" onclick="insertUser('@item.Id')" class="btn btn-danger btn-circle delete-btn" data-toggle="modal" data-target="#deleteModal" data-transaction-id="@item.Id">
+										<span class="icon">
+											<i class="fas fa-trash"></i>
+										</span>
+									 </button>
+								</div>
+							</div>
+						</td>
+					</tr>
+				}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteModalLabel">Nutzer löschen</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<p>Sind Sie sicher, dass Sie den Nutzer löschen möchten?</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+				<!-- Use a regular form with the action to delete the transaction -->
+				<form id="deleteForm" method="post" asp-controller="Admin" asp-action="DeleteUser">
+					<input type="hidden" id="userId" name="id" value="" />
+					<button type="submit" class="btn btn-danger">Löschen</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<script>
+	function insertUser(userId){
+		document.getElementById("userId").value = userId;
+	}
+</script>

@@ -1,0 +1,94 @@
+@model NACTAM.ViewModels.TransactionsOverviewViewModel
+@{
+	ViewData["Title"] = "Transaktionsübersicht";
+    ViewData["Sidebar"] = "ExtendedInsightSidebar";
+	ViewData["Header"] = "Empty";
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet" />
+
+
+<div class="container-fluid">
+	<h1 class="h3 mb-2 text-gray-800" style="margin-top: 70px;">@ViewData["Title"]</h1>
+
+	<!-- Table --->
+	<div class="card o-hidden border-0 shadow-lg my-5">
+		<div class="card-body p-0">
+			<div class="card-header py-3">
+				<h6 class="m-0 font-weight-bold text-primary">Transaktionen</h6>
+			</div>
+			<div class="p-4">
+				<table class="table" id="transaction-table">
+					<thead>
+					<tr>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().CryptoCurrency)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Type)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Date)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Rate)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Amount)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Fee)</th>
+					</tr>
+					</thead>
+					<tbody>
+					@foreach (var item in @Model.Transactions)
+					{
+						<tr>
+							<td>@item.CryptoCurrency</td>
+							<td class="type-@item.Type.ToLower()">@item.Type</td>
+							<td>@item.Date</td>
+							<td>@item.Rate</td>
+							<td>@item.Amount</td>
+							<td>@item.Fee €</td>
+						</tr>
+					}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<p class="p-4">
+			Anzahl der Transaktionen: @Model.Transactions.Count
+		</p>
+	</div>
+</div>
+
+
+
+
+
+@section Scripts {
+	<script src="~/js/transactions.js" asp-append-version="true"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    	<script src="~/js/transactions.js" asp-append-version="true"></script>
+	<script>
+    		// Function to show the toast notification
+    		function showExportNotification() {
+             		toastr.success('<i class="fas fa-download"></i> Download gestartet!', 'Exportiere Transaktionen', {
+             			timeOut: 3000,
+             			closeButton: true, // Optional: Zeigt einen Schließen-Button für die Benachrichtigung an
+             			closeHtml: '<button><i class="fas fa-times"></i></button>' // Optional: Benutzerdefinierter HTML-Code für den Schließen-Button
+             		}); 			
+			}
+				
+    	</script>	
+	
+}
+
+<script>
+
+	const urlParams = new URLSearchParams(window.location.search);
+	const myParam = urlParams.get('userId');
+
+	var linkElement1 = document.getElementById("link1");
+	var linkElement2 = document.getElementById("link2");
+
+	var href1 = linkElement1.getAttribute("href");
+	var href2 = linkElement2.getAttribute("href");
+
+	linkElement1.setAttribute("href", href1 + "?userId=" + myParam);
+	linkElement2.setAttribute("href", href2 + "?userId=" + myParam);
+
+</script>
+
+
+
+

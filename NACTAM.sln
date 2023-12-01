@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NACTAM", "NACTAM\NACTAM.csproj", "{FD895497-658E-4C94-8DD9-3468C76F250D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NACTAM.UnitTests", "NACTAM.UnitTests\NACTAM.UnitTests.csproj", "{6DEB612E-F5AF-44E1-AB45-E59EA92C335A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NACTAM.UITests", "NACTAM.UITests\NACTAM.UITests.csproj", "{C7DB18B5-0C63-47F8-B35C-B766148B55E2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD895497-658E-4C94-8DD9-3468C76F250D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD895497-658E-4C94-8DD9-3468C76F250D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD895497-658E-4C94-8DD9-3468C76F250D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD895497-658E-4C94-8DD9-3468C76F250D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DEB612E-F5AF-44E1-AB45-E59EA92C335A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DEB612E-F5AF-44E1-AB45-E59EA92C335A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DEB612E-F5AF-44E1-AB45-E59EA92C335A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DEB612E-F5AF-44E1-AB45-E59EA92C335A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3F19E06-7215-4447-B12C-76E99F3E300A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3F19E06-7215-4447-B12C-76E99F3E300A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7DB18B5-0C63-47F8-B35C-B766148B55E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7DB18B5-0C63-47F8-B35C-B766148B55E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7DB18B5-0C63-47F8-B35C-B766148B55E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7DB18B5-0C63-47F8-B35C-B766148B55E2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

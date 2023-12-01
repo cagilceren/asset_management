@@ -1,0 +1,77 @@
+@{
+	ViewData["Sidebar"] = "Empty";
+	ViewData["Header"] = "Empty";
+}
+
+@section Styles {
+	<link  asp-append-version="true" href="@Url.Content("~/css/landingpage.css")" rel="stylesheet" type="text/css"/>
+}
+
+<!-- Header-->
+<header class="masthead d-flex align-items-center">
+	<div class="d-flex header-box-parent">
+
+		<img src="@Url.Content("~/images/logo.svg")" class="logo" alt="">
+		<div class="header-box px-4 px-lg-5">
+
+			<h1 class="mb-1 title1"><span>N</span><span>A</span><span>C</span><span>T</span><span>A</span><span>M</span></h1>
+			<h3 class="mb-5 subtitle1"><span>Not </span><span>Another </span><span>Crypto </span><span>Transactions </span><span>Asset </span><span>Manager</span></h3>
+			<button class="btn btn-primary btn-user show-login-button btn-lg">Login</button>
+		</div>
+	</div>
+</header>
+
+<!-- Services-->
+<section class="content-section bg-primary text-white text-center" id="services">
+	<div class="container px-4 px-lg-5">
+		<div class="content-section-heading">
+			<h2 class="py-5">Service</h3>
+			<h2 class="mb-5">Das bieten wir an</h2>
+		</div>
+		<div class="row gx-4 gx-lg-5 pb-4">
+			<div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+				<span class="service-icon rounded-circle mx-auto pb-3"><i class="fa-solid fa-chart-line fa-2xl"></i></span>
+				<h4><strong>Nachverfolgung</strong></h4>
+				<p class="text-faded mb-0">Alle Assets auf einem Blick!</p>
+			</div>
+			<div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+				<span class="service-icon rounded-circle mx-auto pb-3"><i class="fa-solid fa-thumbs-up fa-2xl"></i></span>
+				<h4><strong>Empfehlungen</strong></h4>
+				<p class="text-faded mb-0">Verkauf zu optimalen Zeiten!</p>
+			</div>
+			<div class="col-lg-3 col-md-6 mb-5 mb-md-0">
+				<span class="service-icon rounded-circle mx-auto pb-3"><i class="fa-solid fa-right-left fa-2xl"></i></span>
+				<h4><strong>Transaktionen</strong></h4>
+				<p class="text-faded mb-0">Leichtes hinzufügen, editieren und löschen!</p>
+			</div>
+			<div class="col-lg-3 col-md-6">
+				<span class="service-icon rounded-circle mx-auto pb-3"><i class="fa-solid fa-file-invoice fa-2xl"></i></span>
+				<h4><strong>Steuerberichte</strong></h4>
+				<p class="text-faded mb-0">Mit einem Klick erstellen!</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<div class="login-screen">
+	<partial name="Login"></partial>
+</div>
+<div class="forgot-password-screen">
+	<partial name="ForgotPassword"></partial>
+</div>
+
+
+
+<script src="~/js/landingpage.js"  asp-append-version="true"></script>
+@if (ViewData.ModelState.Keys.Any(k=> ViewData.ModelState[k].Errors.Any())) {
+	<script>showLoginButton.forEach(x => x.click());</script>
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.FeedbackPasswordReset)) {
+<script>
+	forgotPasswordScreen.forEach(x => {
+		x.style.top = "0";
+		x.style.backdropFilter = "blur(5px)";
+	});
+</script>
+}

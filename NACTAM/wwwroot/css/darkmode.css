@@ -1,0 +1,11 @@
+body.dark {
+	filter: invert(1) hue-rotate(180deg) contrast(0.8) brightness(1.2) contrast(1.1);
+}
+
+body.dark img:not(.logo, .logo-small) {
+	filter: invert(1) hue-rotate(180deg) contrast(0.8);
+}
+
+body.dark .shadow {
+	box-shadow: 0 .5rem 1rem rgba(255,255,255,.15) !important;
+}

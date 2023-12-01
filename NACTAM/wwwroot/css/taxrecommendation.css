@@ -1,0 +1,81 @@
+/*
+Styling for TaxRecommendationView
+author: Cagil Ceren Aslan
+*/
+
+td.details-control {
+	text-align:center;
+	color: var(--blue);
+	cursor: pointer;
+}
+tr.shown td.details-control {
+	text-align:center; 
+	color: #007bff8a;
+}
+.table.dataTable tbody tr.selected {
+	color: unset;
+	background-color: unset;
+}
+.hidden {
+	display: none;
+}
+.tax-liable {
+	color: var(--pink);
+}
+.tax-free {
+	color: var(--teal);
+}
+.table {
+	display: table;
+	width: 95%;
+}
+
+.profit {
+	color: var(--teal);
+}
+
+.loss {
+	color: var(--pink);
+}
+
+.table-row {
+	display: table-row;
+}
+
+.table-row {
+	display: table-row;
+}
+
+.table-header {
+	display: table-cell;
+	vertical-align: bottom;
+	font-weight: bolder;
+	padding: 0.75rem;
+	border-bottom: 2px solid var(--secondary);
+	border-top: 2px solid #e3e6f0;
+	border-right: 1px solid #e3e6f0;
+	background-color: var(--light);
+}
+
+.table-cell {
+	display: table-cell;
+	padding: 0.5rem;
+	vertical-align: top;
+	border-bottom: 1px solid #e3e6f0;
+	border-right: 1px solid #e3e6f0;
+}
+
+.info-text{
+	position: absolute;
+	z-index: 10;
+	background-color: var(--secondary);
+	border-radius: 5px;
+	width: 200%;
+	color: var(--white);
+	text-align: center;
+	visibility: hidden;
+}
+
+.info:hover .info-text {
+	visibility: visible;
+}

@@ -1,0 +1,147 @@
+<div class="modal fade" id="otherTaxAdvisorPopUp" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Andere Steuerberater</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+                <div class="modal-body" style="padding-bottom: 0px !important; padding-top: 0px !important;">    
+                    <div id="table-div">
+                        @if(@Model.NoAssignedAdvisors()){
+                            <div class="d-flex justify-content-center align-items-center" style="height: 160px;">
+                                <p class="text-center">Keine anderen Steuerberater zugeteilt</p>
+                            </div>
+                        }else{
+                            <table class="table mt-2" id="otherAdvisorTable">
+                                <tbody>                          
+                                    @foreach (var advisor in @Model.AssignedAdvisors){
+                                        <tr>
+                                            <td class="d-flex justify-content-between align-items-center" id="otherAdvisorRow">
+                                                <label>@advisor.FirstName @advisor.LastName</label>
+                                                <button type="button" class="btn btn-danger remove-button" id="remove-button-@advisor.Id-@Model.SelectedUser" data-username="@advisor.UserName">Entfernen</button>
+                                            </td>
+                                        </tr>
+                                    } 
+                                </tbody>    
+                            </table>
+                        }
+                    </div>
+                </div>
+                    <div class="modal-footer" id="modal-footer">
+                        <button type="button" class="btn btn-primary show-add-button" id="show-add-button">Steuerberater hinzufügen</button>
+                        <div class="add-table-div d-none" id="add-table-div"> 
+                            <h5>Steuerberater hinzufügen</h5>
+                            <div id="table-div">
+                                <table class="table mt-1" id="otherAdvisorTable">
+                                    <tbody>                          
+                                        @foreach (var advisor in @Model.UnassignedAdvisors){
+                                            <tr>
+                                                <td class="d-flex justify-content-between align-items-center" id="otherAdvisorRow">
+                                                    <label>@advisor.FirstName @advisor.LastName</label>
+                                                    <button type="button" class="btn btn-primary add-button" id="add-button-@advisor.Id-@Model.SelectedUser" data-username="@advisor.UserName">Hinzufügen</button>
+                                                </td> 
+                                            </tr>
+                                        } 
+                                    </tbody>    
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+            
+            </div>
+    </div>
+</div>
+
+<style>
+    #otherAdvisorTable {
+        border-collapse: separate;
+        border-spacing: 0 5px;
+    }
+
+    .table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    #otherAdvisorRow {
+        border-top: none;
+        border-bottom: none;
+        background-color: rgb(224, 224, 224);
+        border-radius: 10px;
+    }
+
+    #table-div {
+        height: 160px;
+        overflow-y: scroll;
+    }
+</style>
+
+<script>
+
+    $(document).ready(function() {
+        $('#otherTaxAdvisorPopUp').modal('show');
+    });
+
+    $(document).on('click', '#otherTaxAdvisorPopUp .close', function () {
+        $('#otherTaxAdvisorPopUp').modal('hide');
+    });
+
+    $('#otherTaxAdvisorPopUp').on('hidden.bs.modal', function () {
+        location.reload();
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.remove-button', function() {
+            var userName = $(this).data('username');
+            var selectedUser = "@Model.SelectedUser";
+            $.ajax({
+                url: '/Advisor/RemoveOtherAdvisor',
+                type: 'GET',
+                data: { userName: selectedUser, advisorUserName: userName },
+                success: function(response) {
+                    var updatedAssignedTable = $(response).find('#table-div').html();
+                    $('#table-div').html(updatedAssignedTable);
+
+                    var updatedUnassignedTable = $(response).find('#add-table-div').html();
+                    $('#add-table-div').html(updatedUnassignedTable)
+
+                    $('#otherTaxAdvisorPopUp').modal('show');
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.show-add-button', function() {
+            var modalFooter = document.getElementById("modal-footer");
+            var showAddButton = document.getElementById("show-add-button");
+            var tableDiv = document.getElementById("add-table-div");
+
+            modalFooter.classList.add("d-block");
+            showAddButton.classList.add("d-none");
+            tableDiv.classList.remove("d-none");
+        });
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.add-button', function() {
+            var userName = $(this).data('username');
+            var selectedUser = "@Model.SelectedUser";
+            $.ajax({
+                url: '/Advisor/AddOtherAdvisor',
+                type: 'GET',
+                data: { userName: selectedUser, advisorUserName: userName },
+                success: function(response) {
+                    var updatedAssignedTable = $(response).find('#table-div').html();
+                    $('#table-div').html(updatedAssignedTable);
+
+                    var updatedUnassignedTable = $(response).find('#add-table-div').html();
+                    $('#add-table-div').html(updatedUnassignedTable)
+
+                    $('#otherTaxAdvisorPopUp').modal('show');
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,107 @@
+@model NACTAM.ViewModels.AssetsOverviewModel
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+@{
+	ViewData["Title"] = "Assetsübersicht";
+    ViewData["Sidebar"] = "ExtendedInsightSidebar";
+	ViewData["Header"] = "Empty";
+}
+
+<div class="container-fluid">
+	<h1 class="h3 mb-2 text-gray-800" style="margin-top: 70px;">@ViewData["Title"]</h1>
+	<div class="row">
+		<div class="col-md-4">
+			<div class="card o-hidden border-0 shadow-lg my-5">
+				<div class="card-body p-0">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">Gesamtwert</h6>
+					</div>
+					<div class="p-4">
+						@{
+							decimal sum = 0;
+							foreach(var el in @Model.Assets) 
+							
+								sum += @el.Value;
+							
+						}
+						<div class="text-center">
+							<h4 class="display-5 font-weight-bold">@sum €</h4>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<!-- Assets table --->
+		<div>
+			<div class="card o-hidden border-0 shadow-lg my-5">
+				<div class="card-body p-0">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">Assets</h6>
+					</div>
+					<div class="p-4">
+						<p class="mb-3">Zuletzt aktualisiert: </p>
+						<table class="table" id="assets-table">
+							<thead>
+							<tr>
+								<th></th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Currency)</th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Value)</th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Rate)</th>
+							</tr>
+							</thead>
+							<tbody>
+							@foreach (var item in @Model.Assets)
+							{
+								<tr>
+									<td><img src="@item.Logo" alt="" width="35" height="35"></td>
+									<td>@item.Currency</td>
+									<td>@item.Value €</td>
+									<td>@item.Rate €/St.</td>
+								</tr>
+							}
+							</tbody>
+						</table>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+    $('#currencySelectChart').select2();
+</script>
+<script>
+	$('#currencySelectChart').on('change', function() {
+  		updateCanvas($(this).val());
+	});
+</script>
+
+
+<script>
+
+	const urlParams = new URLSearchParams(window.location.search);
+	const myParam = urlParams.get('userId');
+
+	var linkElement1 = document.getElementById("link1");
+	var linkElement2 = document.getElementById("link2");
+
+	var href1 = linkElement1.getAttribute("href");
+	var href2 = linkElement2.getAttribute("href");
+
+	linkElement1.setAttribute("href", href1 + "?userId=" + myParam);
+	linkElement2.setAttribute("href", href2 + "?userId=" + myParam);
+
+</script>
+
+
+
+@section Scripts {
+	<script src="~/js/assets.js" asp-append-version="true"></script>
+}
+
+

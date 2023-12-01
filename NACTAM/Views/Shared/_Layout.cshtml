@@ -1,0 +1,66 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using NACTAM.Models.Repositories
+@using NACTAM.Models
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+@{
+	var isDarkmode = false;
+	var isSignedIn = SignInManager.IsSignedIn(User);
+	if (isSignedIn && (await UserManager.GetUserAsync(User))?.DarkMode == true){
+		isDarkmode = true;
+	}
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/darkmode.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/colors.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/output/css/deps.css" asp-append-version="true" />
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4-4.1.1/jq-3.3.1/dt-1.10.23/b-1.6.5/fc-3.3.2/sc-2.0.3/sb-1.0.1/sp-1.2.2/sl-1.3.1/datatables.min.css" />
+	@RenderSection("Styles", false)
+	<script src="~/js/signalr/dist/browser/signalr.js"></script>
+</head>
+
+<body id="page-top" class="@(isDarkmode? "dark" : "default-body")">
+	<div id="wrapper">
+		<partial name="@(ViewData["Sidebar"] ?? "Sidebar")"/>
+		<div id="content-wrapper" class="d-flex flex-column">
+			<div id="content">
+
+				<partial name="@(ViewData["Header"] ?? "Header")"/>
+				<main role="main" class="main-view pt-4">
+					@RenderBody()
+					<footer class="sticky-footer">
+						<div class="container my-auto">
+							<div class="copyright text-center my-auto">
+								<span>Copyright &copy;NACTAM 2023</span>
+							</div>
+						</div>
+					</footer>
+				</main>
+			</div>
+
+		</div>
+	</div>
+
+
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/js/site.js" asp-append-version="true"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/v/bs4-4.1.1/jq-3.3.1/dt-1.10.23/b-1.6.5/fc-3.3.2/sc-2.0.3/sb-1.0.1/sp-1.2.2/sl-1.3.1/datatables.min.js"></script>
+	<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@@^1"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+	<script src="~/js/charthelper.js" asp-append-version="true"></script>
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

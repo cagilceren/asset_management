@@ -1,0 +1,536 @@
+@{
+    ViewData["Sidebar"] = "AdvisorSidebar";
+}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<!-- Page Heading -->
+	<h1 class="h3 mb-2 text-gray-800">Meine Kunden</h1>
+
+	<!-- DataTales Example -->
+	<div class="card shadow mb-4">
+		<div class="card-body">
+			<div class="table-responsive">
+				@if (!string.IsNullOrEmpty(ViewBag.Error)){
+					<div class="alert alert-danger" role="alert">
+						<span class="label">@ViewBag.Error</span>
+					</div>
+    			}
+				<table id="myUser-table" class="table table-bordered" width="100%" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Kunde</th>
+						</tr>
+					</thead>
+					<tbody>
+
+
+						@foreach (var user in @Model.Users)
+						{
+							<tr>
+                            <td>
+        						<div class="row">
+          							<div class="col text-left">
+            							@if(@user.AddressSet()){
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setFullContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@user.Address.StreetName', '@user.Address.HouseNumber', '@user.Address.ZIP', '@user.Address.City', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}else{
+											<span class="label" style="cursor: pointer;" data-toggle="modal" data-target="#contactDetails" onclick="setBasicContactDetails('@user.FirstName', '@user.LastName', '@user.Email', '@user.PhoneNumber', '@Url.Action("ProfilePicture", "Advisor" , new { UserName=@user.UserName })')">@user.FirstName @user.LastName</span>
+										}
+          							</div>
+									@if(@Model.GetInsightAllowance(user.UserName) == InsightStatus.Assigned){
+										<div class="col text-right">
+            								<div class="btn-group" role="group">
+												<form method="post" asp-action="RequestSimpleInsight" asp-route-userName=@user.UserName>
+					                      			<button class="btn btn-danger rounded" style="width: 200px">Einsicht anfordern</button>
+				                      			</form>
+            								</div>
+          								</div>
+									}else if(@Model.GetInsightAllowance(user.UserName) == InsightStatus.SimpleUnaccepted){
+										<div class="col text-right">
+            								<div class="btn-group" role="group">
+              									<form method="post" asp-action="UndoRequestSimpleInsight" asp-route-userName=@user.UserName>
+					                      			<button class="btn btn-danger rounded btn-faded" style="width: 200px">Einsicht angefordert</button>
+				                      			</form>
+            								</div>
+          								</div>
+									}else if(@Model.GetInsightAllowance(user.UserName) == InsightStatus.Simple){
+										<div class="col text-right">
+            								<div class="btn-group" role="group">
+												<div class="btn-group" role="group">
+													<button class="btn btn-success open-simpleInsight rounded-left" data-username="@user.UserName" style="width: 200px">Steuerliche Auswertung</button>
+													<button class="btn btn-primary mr-2 rounded-right download-simpleInsight" data-username="@user.UserName">
+														<i class="fa-solid fa-file-arrow-down"></i>
+													</button>
+            									</div>
+              									<form method="post" asp-action="RequestExtended" asp-route-userName=@user.UserName>
+					                      			<button class="btn btn-warning rounded" style="width: 200px">Erw. Ansicht anfordern</button>
+				                      			</form>
+            								</div>
+          								</div>
+									}else if(@Model.GetInsightAllowance(user.UserName) == InsightStatus.ExtendedUnaccepted){
+										<div class="col text-right">
+            								<div class="btn-group" role="group">
+												<div class="btn-group" role="group">
+													<button class="btn btn-success open-simpleInsight rounded-left" data-username="@user.UserName" style="width: 200px">Steuerliche Auswertung</button>
+													<button class="btn btn-primary mr-2 rounded-right download-simpleInsight" data-username="@user.UserName">
+														<i class="fa-solid fa-file-arrow-down"></i>
+													</button>
+            									</div>
+              									<form method="post" asp-action="UndoRequestExtended" asp-route-userName=@user.UserName>
+					                      			<button class="btn btn-warning rounded btn-faded" style="width: 200px">Erw. Ansicht angefordert</button>
+				                      			</form>
+            								</div>
+          								</div>
+									}else if(@Model.GetInsightAllowance(user.UserName) == InsightStatus.Extended){
+										<div class="col text-right">
+            								<div class="btn-group" role="group">
+												<div class="btn-group" role="group">
+													<button class="btn btn-success open-simpleInsight rounded-left" data-username="@user.UserName" style="width: 200px">Steuerliche Auswertung</button>
+													<button class="btn btn-primary mr-2 rounded-right download-simpleInsight" id="download-simpleInsight" data-username="@user.UserName">
+														<i class="fa-solid fa-file-arrow-down"></i>
+													</button>
+            									</div>
+												<div class="btn-group" role="group">
+													<button class="btn btn-success rounded-left extendedInsight" style="width: 200px" data-username="@user.UserName">Einsicht</button>
+													<button class="btn btn-primary rounded-right download-extendedInsight" id="download-extendedInsight" data-username="@user.UserName">  
+														<i class="fa-solid fa-file-arrow-down"></i>
+													</button>
+            									</div>
+              									<form id="openExtendedInsightForm-@user.UserName" method="post" asp-action="ExtendedInsightAssets" asp-route-userId=@user.Id target="_blank"></form>
+            								</div>
+          								</div>
+									}
+        						</div>
+      						</td>
+                        	</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Simple Insight Pop Up div -->
+
+<div id="simpleInsightPopUpDiv"></div>
+
+
+<!-- Contact Details Pop Up View-->
+
+<div class="modal fade" id="contactDetails" tabindex="-1" role="dialog" aria-labelledby="popupModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+    	<div class="modal-content">
+      		<div class="modal-header">
+        		<h5 class="modal-title" id="popupModalLabel">Persönliche Daten</h5>
+        		<button type="button" class="close" data-dismiss="modal" aria-label="Schließen">
+          			<span aria-hidden="true">&times;</span>
+        		</button>
+      		</div>
+      		<div class="modal-body">
+				<div class="d-flex text-black">
+  					<div class="flex-shrink-0">
+    					<img id="profile-image" src=""
+      					alt="Generic placeholder image" class="img-fluid"
+      					style="width: 199px; border-radius: 10px;">
+  					</div>
+  					<div class="flex-grow-1 ms-3">
+    					<h5 class="mb-0" id="label-name">Name</h5>
+						<p class="mb-0 pb-0" style="color: #2b2a2a; font-size: 14px;" id="label-email">Email</p>
+    					<p class="mb-1 pb-0" style="color: #2b2a2a; font-size: 14px;" id="label-mobile">Mobile</p>
+						<div class="justify-content-start rounded-3 p-2 mb-1" style="background-color: #efefef;" id="div-address">
+      						<div>
+        						<p class="small text-muted mb-0">Adresse</p>
+        						<p class="mb-0" id="label-street">Street Nr</p>
+        						<p class="mb-0" id="label-city">ZIP City</p>
+      						</div>
+    					</div>
+    					<div class="d-flex pt-1">
+  							<a href="mailto:noemailgiven" id="button-sendEmail" class="flex-grow-1 pr-1" style="text-decoration: none;">
+   			 					<button type="button" class="btn btn-primary btn-block">E-Mail verfassen</button>
+ 	 						</a>
+  							<a href="tel:nonumbergiven" id="button-call" class="flex-grow-2 pl-1" style="text-decoration: none;">
+    							<button class="btn btn-success btn-block">Anrufen</button>
+  							</a>
+						</div>
+  					</div>
+				</div>
+  			</div>
+		</div>     			
+    </div>
+</div>
+
+<div id="content" class="d-none">
+	<h1>Hello, World!</h1>
+    <p>This is an example HTML content.</p>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.js"></script>
+
+<script>
+
+  	function setFullContactDetails(firstName, lastName, email, phoneNumber, streetName, houseNumber, zip, city, image) {
+		document.getElementById("div-address").classList.add("d-flex");
+		document.getElementById("label-name").textContent = firstName + " " + lastName;
+		document.getElementById("label-email").textContent = email;
+		document.getElementById("label-mobile").textContent = phoneNumber;
+		document.getElementById("label-street").textContent = streetName + " " + houseNumber;
+		document.getElementById("label-city").textContent = zip + " " + city
+		document.getElementById("button-sendEmail").setAttribute('href', "mailto:" + email);
+		document.getElementById("button-call").setAttribute('href', "tel:" + phoneNumber);
+		document.getElementById("profile-image").src = image;
+  	}
+	
+  	function setBasicContactDetails(firstName, lastName, email, phoneNumber, image) {
+		document.getElementById("div-address").classList.add("d-none");
+		document.getElementById("label-name").textContent = firstName + " " + lastName;
+		document.getElementById("label-email").textContent = email;
+		document.getElementById("label-mobile").textContent = phoneNumber;
+		document.getElementById("button-sendEmail").setAttribute('href', "mailto:" + email);
+		document.getElementById("button-call").setAttribute('href', "tel:" + phoneNumber);
+		document.getElementById("profile-image").src = image;
+  	}
+
+	$(document).ready(function() {
+        $('.open-simpleInsight').click(function() {
+            var userName = $(this).data('username');
+
+            $.ajax({
+                url: '/Advisor/SimpleInsight',
+                data: { userName: userName },
+                type: 'GET',
+                success: function(response) {
+                    $('#simpleInsightPopUpDiv').html(response);
+                    $('#simpleInsight').modal('show');
+                }
+            });
+        });
+    });
+
+	$(document).ready(function() {
+        $('.download-simpleInsight').click(function() {
+            var userName = $(this).data('username');
+
+            $.ajax({
+                url: '/Advisor/GetSimpleInsightData',
+                data: { userName: userName },
+                type: 'GET',
+				dataType: "json",
+                success: function(data) {
+					if(data.error == "true"){
+						alert("Sie haben keine Einsichtserlaubnis für diesen User!");
+					}else{
+                    var personalDataList = data.list1;
+					var yearsList = data.list2;
+					var profitList = data.list3;
+					var stakingMiningList = data.list4;
+
+					var doc = new jsPDF('p', 'pt', 'a4');
+
+					//title
+  					doc.setFont("verdana", "bold");
+ 	 				doc.setFontSize(20);
+  					var title = "Steuerliche Auswertung " + personalDataList[0] + " " + personalDataList[1];
+  					doc.text(title, 30, 50);
+
+					//date
+  					doc.setFont("verdana", "normal");
+  					doc.setFontSize(10);
+  					doc.setTextColor('#5E5E5E');
+					const now = new Date();
+					const date = now.toDateString();
+  					doc.text(date, 30, 70);
+
+					doc.line(30, 80, 555, 80, 'F');
+
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.setTextColor('#000000');
+					doc.text("Persönliche Daten:", 30, 105);
+
+					doc.setFont("verdana", "normal");
+  					doc.setFontSize(13);
+					doc.text("Vorname: " + personalDataList[0], 40, 130);
+					doc.text("Nachname: " + personalDataList[1], 40, 150);
+					doc.text("E-Mail Adresse: " + personalDataList[2], 40, 170);
+					doc.text("Telefonnummer: " + personalDataList[3], 40, 190);
+					doc.text("Straße: " + personalDataList[4], 40, 215);
+					doc.text("Hausnummer: " + personalDataList[5], 40, 235);
+					doc.text("Postleitzahl: " + personalDataList[6], 40, 255);
+					doc.text("Stadt: " + personalDataList[7], 40, 275);
+
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.text("Steuerliche Auswertung:", 30, 310);
+
+					//table with data
+  					var columns = [
+      					{title: "Jahr", dataKey: "col2"},
+      					{title: "Gewinne aus Verkäufen", dataKey: "col3"}, 
+      					{title: "Sonstige Leistungen", dataKey: "col4"},
+  					];
+  					var rows = [];
+
+					for (let i = 0; i < yearsList.length; i++) {
+        				rows.push({
+      						"col2": yearsList[i],
+     						"col3": profitList[i] + "€",
+      						"col4": stakingMiningList[i] + "€",
+    					});
+      				}
+
+					doc.autoTable(columns, rows, {
+      					styles: {
+        					fillColor: [100,100,100],
+        					lineColor: 240, 
+        					lineWidth: 1,
+      					},
+      					columnStyles: {
+        					col2: {fillColor: false},
+        					col3: {fillColor: false},
+        					col4: {fillColor: false},  
+      					},
+      					margin: {top: 330}
+  					}); 
+
+					var pdfname = "Steuerliche Auswertung_" + personalDataList[0] + "_" + personalDataList[1] + ".pdf";
+    				doc.save(pdfname);
+					}
+                }
+            });
+        });
+    });
+
+	$(document).ready(function() {
+        $('.download-extendedInsight').click(function() {
+            var userName = $(this).data('username');
+
+            $.ajax({
+                url: '/Advisor/GetExtendedInsightData',
+                data: { userName: userName },
+                type: 'GET',
+				dataType: "json",
+                success: function(data) {
+					if(data.error == "true"){
+						alert("Sie haben keine Einsichtserlaubnis für diesen User!");
+					}else{
+                    var personalDataList = data.list1;
+					var yearsList = data.list2;
+					var profitList = data.list3;
+					var stakingMiningList = data.list4;
+					var assetCurrencyList = data.list5;
+					var assetValueList = data.list6;
+					var assetRateList = data.list7;
+					var transCurrencyList = data.list8;
+					var transTypeList = data.list9;
+					var transDateList = data.list10;
+					var transAmountList = data.list11;
+					var transRateList = data.list12;
+					var transFeeList = data.list13;
+
+
+					var doc = new jsPDF('p', 'pt', 'a4');
+
+					//title
+  					doc.setFont("verdana", "bold");
+ 	 				doc.setFontSize(20);
+  					var title = "Einsicht " + personalDataList[0] + " " + personalDataList[1];
+  					doc.text(title, 30, 50);
+
+					//date
+  					doc.setFont("verdana", "normal");
+  					doc.setFontSize(10);
+  					doc.setTextColor('#5E5E5E');
+					const now = new Date();
+					const date = now.toDateString();
+  					doc.text(date, 30, 70);
+
+					doc.line(30, 80, 555, 80, 'F');
+
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.setTextColor('#000000');
+					doc.text("Persönliche Daten:", 30, 105);
+
+					doc.setFont("verdana", "normal");
+  					doc.setFontSize(13);
+					doc.text("Vorname: " + personalDataList[0], 40, 130);
+					doc.text("Nachname: " + personalDataList[1], 40, 150);
+					doc.text("E-Mail Adresse: " + personalDataList[2], 40, 170);
+					doc.text("Telefonnummer: " + personalDataList[3], 40, 190);
+					doc.text("Straße: " + personalDataList[4], 40, 215);
+					doc.text("Hausnummer: " + personalDataList[5], 40, 235);
+					doc.text("Postleitzahl: " + personalDataList[6], 40, 255);
+					doc.text("Stadt: " + personalDataList[7], 40, 275);
+
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.text("Steuerliche Auswertung:", 30, 310);
+
+					var endOfTable1 = 0;
+
+					if(yearsList.length == 0){
+						doc.setFont("verdana", "normal");
+  						doc.setFontSize(13);
+						doc.text("Keine steuerrelevanten Daten vorhanden", 40, 320);
+						endOfTable1 = 340;
+					}else{
+						//table with data
+  						var columns = [
+      						{title: "Jahr", dataKey: "col2"},
+      						{title: "Gewinne aus Verkäufen", dataKey: "col3"}, 
+      						{title: "Sonstige Leistungen", dataKey: "col4"},
+  						];
+  						var rows = [];
+
+						for (let i = 0; i < yearsList.length; i++) {
+        					rows.push({
+      							"col2": yearsList[i],
+     							"col3": profitList[i] + "€",
+      							"col4": stakingMiningList[i] + "€",
+    						});
+      					}
+
+						doc.autoTable(columns, rows, {
+      						styles: {
+        						fillColor: [100,100,100],
+        						lineColor: 240, 
+        						lineWidth: 1,
+      						},
+      						columnStyles: {
+        						col2: {fillColor: false},
+        						col3: {fillColor: false},
+        						col4: {fillColor: false},  
+      						},
+      						margin: {top: 330}
+  						});
+
+						endOfTable1 = doc.autoTableEndPosY();
+					} 
+					
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.text("Assets:", 30, endOfTable1 + 35);
+
+					if(assetCurrencyList.length != 0){
+						//table with data
+  					var columns = [
+      					{title: "Währung", dataKey: "col2"},
+      					{title: "Wert", dataKey: "col3"}, 
+      					{title: "Kurs", dataKey: "col4"},
+  					];
+  					var rows = [];
+
+					for (let i = 0; i < assetCurrencyList.length; i++) {
+        				rows.push({
+      						"col2": assetCurrencyList[i],
+     						"col3": assetValueList[i] + "€",
+      						"col4": assetRateList[i] + "€/St.",
+    					});
+      				}
+
+					var startTable2 = endOfTable1 + 55;
+					doc.autoTable(columns, rows, {
+						startY: startTable2,
+      					styles: {
+        					fillColor: [100,100,100],
+        					lineColor: 240, 
+        					lineWidth: 1,
+      					},
+      					columnStyles: {
+        					col2: {fillColor: false},
+        					col3: {fillColor: false},
+        					col4: {fillColor: false},  
+      					}
+  					}); 
+
+					var endOfTable2 = doc.autoTableEndPosY();
+
+					doc.setFont("verdana", "bold");
+  					doc.setFontSize(15);
+					doc.text("Transaktionen:", 30, endOfTable2 + 35);
+
+					//table with data
+  					var columns = [
+      					{title: "Währung", dataKey: "col2"},
+      					{title: "Art", dataKey: "col3"}, 
+      					{title: "Datum", dataKey: "col4"},
+						{title: "Menge", dataKey: "col5"},
+						{title: "Kurs", dataKey: "col6"},
+						{title: "Gebühr", dataKey: "col7"},
+  					];
+  					var rows = [];
+
+					for (let i = 0; i < transCurrencyList.length; i++) {
+        				rows.push({
+      						"col2": transCurrencyList[i],
+     						"col3": transTypeList[i],
+      						"col4": transDateList[i],
+							"col5": transAmountList[i],
+							"col6": transRateList[i] + "€/St.",
+							"col7": transFeeList[i] + "€",
+    					});
+      				}
+
+					var startTable3 = endOfTable2 + 55;
+					doc.autoTable(columns, rows, {
+						startY: startTable3,
+      					styles: {
+        					fillColor: [100,100,100],
+        					lineColor: 240, 
+        					lineWidth: 1,
+      					},
+      					columnStyles: {
+        					col2: {fillColor: false},
+        					col3: {fillColor: false},
+        					col4: {fillColor: false},
+							col5: {fillColor: false},
+        					col6: {fillColor: false},
+        					col7: {fillColor: false},   
+      					}
+  					}); 
+					}else{
+						doc.setFont("verdana", "normal");
+  						doc.setFontSize(13);
+						doc.text("Keine Assets vorhanden", 40, endOfTable1 + 55);
+
+						doc.setFont("verdana", "bold");
+  						doc.setFontSize(15);
+						doc.text("Transaktionen:", 30, endOfTable1 + 85);
+
+						doc.setFont("verdana", "normal");
+  						doc.setFontSize(13);
+						doc.text("Keine Transaktionen vorhanden", 40, endOfTable1 + 115);
+					}
+
+					var pdfname = "Einsicht_" + personalDataList[0] + "_" + personalDataList[1] + ".pdf";
+    				doc.save(pdfname);
+					}
+                }
+            });
+        });
+    });
+
+	$(document).ready(function() {
+        $('.extendedInsight').click(function() {
+            var userName = $(this).data('username');
+			var id = "openExtendedInsightForm-" + userName;
+			var form = document.getElementById(id);
+			form.submit()
+        });
+    });
+
+
+
+</script>
+
+<style>
+	.btn-faded {
+  		opacity: 0.6; /* Verringert die Deckkraft des Buttons */
+  		filter: grayscale(50%); /* Wendet eine Graustufeneffekt an */
+	}
+</style>

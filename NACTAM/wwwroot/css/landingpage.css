@@ -1,0 +1,54 @@
+.login-screen,.forgot-password-screen {
+	position: absolute;
+	display: grid;
+	width: 100vw;
+	height: 100vh;
+	top: -100vh;
+	left: 0;
+	backdrop-filter: blur(0px);
+	justify-content: center;
+	align-items: center;
+	transition: top 0.5s, backdrop-filter 0.5s;
+
+}
+
+
+.login-screen > div {
+	width: 40vw;
+	border-radius: 25px;
+}
+
+.forgot-password-screen > div {
+	width: 40vw;
+	border-radius: 25px;
+}
+
+.header-box {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.header-box-parent {
+	justify-content: center;
+	width: 100%;
+	margin-bottom: 50px;
+}
+
+
+span > .fa-2xl {
+	transform: translateY(-20px);
+}
+
+.title1 > span {
+	transition: color 0.2s;
+}
+
+.subtitle1 > span {
+	transition: color 0.2s;
+}
+
+.alert-danger:empty {
+	display: none;
+}

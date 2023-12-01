@@ -1,0 +1,110 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.type-sell {
+	color: rgb(11, 197, 11);
+}
+
+.type-buy {
+	color: rgb(35, 35, 233);
+}
+
+.type-mining {
+	color: rgb(216, 156, 45);
+}
+
+.type-staking {
+	color: rgb(227, 43, 46);
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+main { 
+	min-height: 100%;
+}
+
+.logo {
+	filter:  drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) drop-shadow(0px 0px 0 #888) invert(1) sepia(29%) saturate(7091%)  brightness(0.64) invert(1)  hue-rotate(-10deg);
+	-webkit-transition: 0.1s -webkit-filter linear;
+	-moz-transition: 0.1s -moz-filter linear;
+	-moz-transition: 0.1s filter linear;
+	-ms-transition: 0.1s -ms-filter linear;
+	-o-transition: 0.1s -o-filter linear;
+	transition: 0.1s filter linear, 0.1s -webkit-filter linear;
+}
+
+.logo-small {
+	filter: invert(1) sepia(29%) saturate(7091%)  brightness(0.64) invert(1)  hue-rotate(-10deg);
+	-webkit-transition: 0.1s -webkit-filter linear;
+	-moz-transition: 0.1s -moz-filter linear;
+	-moz-transition: 0.1s filter linear;
+	-ms-transition: 0.1s -ms-filter linear;
+	-o-transition: 0.1s -o-filter linear;
+	transition: 0.1s filter linear, 0.1s -webkit-filter linear;
+}
+
+div.p-5 .select2-selection__arrow {
+	top: 8px;
+}
+
+div.p-5 .select2-selection.select2-selection--single {
+	height: 44px;
+	border-radius: 22px;
+	vertical-align: middle;
+	padding-top: 8px;
+}
+
+div.p-5 .select2-container {
+	width: 100%;
+}
+
+.dropdown-list {
+	max-height: calc( 100vh - 4.375rem );
+	overflow-y: scroll !important;
+}
+
+.main-view{
+	overflow-y: scroll;
+}
+
+.profile-flex {
+	display: flex;
+	gap: 30px;
+}
+
+.profile-flex > div {
+	flex: 1;
+}
+
+#animation_container{
+	transform: translate(-50%, -50%) scale(0.3);
+}
+
+.notification-profile-pic {
+	width: 100%;
+	height: 100%;
+}
+
+#error-banner-1 {
+	transition: transform 0.4s, height 0.4s;
+	transform: scaleY(0);
+	height: 0;
+}

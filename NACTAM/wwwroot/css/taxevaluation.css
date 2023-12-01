@@ -1,0 +1,10 @@
+/*
+Styling for TaxEvaluation
+author: Tuan Bui
+ */
+
+#evaluation-title {
+	display: flex;
+	align-items: center;
+	gap: 25px;
+}

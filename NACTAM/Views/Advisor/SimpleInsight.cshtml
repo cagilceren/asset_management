@@ -1,0 +1,56 @@
+<div class="modal fade" id="simpleInsight" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Steuerliche Auswertung</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+                <div class="modal-body" style="padding-bottom: 0px !important; padding-top: 0px !important;">    
+                    <div id="table-div">
+                        @if(@Model.NoYearsToShow()){
+                            <div class="d-flex justify-content-center align-items-center" style="height: 160px;">
+                                <p class="text-center">Keine steuerrelevanten Daten vorhanden</p>
+                            </div>
+                        }else{
+                            <table class="table mt-2" id="yearsTable">
+                                <thead>
+                                    <tr> 
+                                        <th class="text-center">Jahr</th>
+                                        <th class="text-center">Gewinn aus Verkäufen</th>
+                                        <th class="text-center">Sonstige Leistungen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>                          
+                                    @foreach(var index in @Model.Index){
+                                        <tr>
+                                            <td class="text-center">
+                                                <label>@Model.Years[index]</label>
+                                            </td>
+                                            <td class="text-center">
+                                                <label>@Model.ProfitsPerYear[index]€</label>
+                                            </td>
+                                            <td class="text-center">
+                                                <label>@Model.MiningAndStakingPerYear[index]€</label>
+                                            </td>
+                                        </tr>
+                                    } 
+                                </tbody>    
+                            </table>
+                        }
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#simpleInsight').modal('show');
+    });
+
+    $(document).on('click', '#simpleInsight .close', function () {
+        $('#simpleInsight').modal('hide');
+    });
+</script>

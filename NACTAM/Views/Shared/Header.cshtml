@@ -1,0 +1,135 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using NACTAM.Models.Repositories
+@using NACTAM.Models
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject INotificationRepository Repository
+@inject IUserRepository UserRepository
+
+@{
+	var user = await UserManager.GetUserAsync(User);
+}
+
+<style>
+.main-view {
+	height: calc(100vh - 4.375rem);
+}
+</style>
+@if (user.DiscriminatorValue == "Admin"){
+<style>
+nav.bg-white.navbar-disc {
+	background: linear-gradient(180deg, #4e73df 10%, #224abe 100%) !important;
+	color: white;
+}
+nav.bg-white.navbar-disc > ul {
+	filter: brightness(2);
+}
+nav.bg-white.navbar-disc  img {
+	filter: brightness(0.5);
+}
+
+nav.bg-white.navbar-disc  .dropdown-list {
+	filter: brightness(0.5);
+}
+</style>
+}
+
+<script>
+	var currentUserId = "@user.Id";
+</script>
+
+<nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow navbar-disc" style="z-index: 5">
+
+	<!-- Sidebar Toggle (Topbar) -->
+	<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+		<i class="fa fa-bars"></i>
+	</button>
+@if (user.DiscriminatorValue == "Admin"){
+	<a href="/" id="" style="color: white" class="btn btn-link rounded-circle mr-3">
+		<i class="fa fa-home"></i>
+	</a>
+
+}
+
+
+	<!-- Topbar Navbar -->
+	<ul class="navbar-nav ml-auto">
+
+		<!-- Nav Item - Search Dropdown (Visible Only XS) -->
+		<li class="nav-item dropdown no-arrow d-sm-none">
+			<a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
+				data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<i class="fas fa-search fa-fw"></i>
+			</a>
+			<!-- Dropdown - Messages -->
+			<div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
+				aria-labelledby="searchDropdown">
+				<form class="form-inline mr-auto w-100 navbar-search">
+					<div class="input-group">
+						<input type="text" class="form-control bg-light border-0 small"
+							placeholder="Search for..." aria-label="Search"
+							aria-describedby="basic-addon2">
+						<div class="input-group-append">
+							<button class="btn btn-primary" type="button">
+								<i class="fas fa-search fa-sm"></i>
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</li>
+
+		<!-- Nav Item - Alerts -->
+		<li class="nav-item dropdown no-arrow mx-1">
+			<a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+				data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<i class="fas fa-bell fa-fw"></i>
+				<!-- Counter - Alerts -->
+				<span class="badge badge-danger badge-counter" id="notification-count">
+					@(Repository.NotificationsUnread(user).Count())
+				</span>
+			</a>
+			<!-- Dropdown - Alerts -->
+			<div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+				aria-labelledby="alertsDropdown">
+				<h6 class="dropdown-header">
+					Alerts Center
+				</h6>
+				<div id="raw-notifications">
+					@Html.Raw(Repository.NotificationsToHTML(Repository.NotificationsHeader(user)))
+				</div>
+				<a class="dropdown-item text-center small text-gray-500" href="@Url.Action("NotificationList", "Home")">Show All Alerts</a>
+			</div>
+		</li>
+
+		<div class="topbar-divider d-none d-sm-block"></div>
+
+		<!-- Nav Item - User Information -->
+		<li class="nav-item dropdown no-arrow">
+			<a class="nav-link" id="userDropdown" role="button"
+				 asp-action="Settings" asp-controller="Home">
+				<span class="mr-2 d-none d-lg-inline text-gray-600 small">@user.FirstName @user.LastName</span>
+				<img class="profile-pic img-account-profile rounded-circle mb-2"  width="50" height="50" src="@Url.Action("ProfilePicture", "Home" , new { UserName =user.UserName })" />
+			</a>
+		</li>
+
+		<div class="topbar-divider d-none d-sm-block"></div>
+		<li class="nav-item dropdown no-arrow">
+			<form style="height: 100%" method="post" asp-controller="Home" asp-action="Logout">
+				<button type="submit" style="border: none; background: none; padding: 0; filter: invert(1) brightness(.8); height: 100%"><i class="fas fa-right-from-bracket fa-fw"></i></button>
+			</form>
+		</li>
+		<div class="topbar-divider d-none d-sm-block"></div>
+		<li class="nav-item dropdown no-arrow">
+			<button onclick="changeDarkmode()" style="height: 100%; border: none; background: none; padding: 0; filter: invert(1) brightness(.8); height: 100%"><i class="fas fa-circle-half-stroke fa-fw"></i></button>
+		</li>
+
+
+	</ul>
+
+</nav>
+<script src="~/js/notifications.js" asp-append-version="true"></script>
+<Partial name="AnimatedGecko"></Partial>
+<script src="~/js/easteregg.js" asp-append-version="true"></script>

@@ -1,0 +1,183 @@
+image: microsoft/dotnet:latest
+
+stages:
+  - test
+  - deploy
+
+variables:
+  project: "NACTAM"
+  TZ: "Europe/Berlin"   # Set the timezone to Berlin
+  LANG: "de_DE.UTF-8"
+  LC_ALL: "de_DE.UTF-8"
+  LANGUAGE: "de_DE.UTF-8"
+
+
+before_script:
+    - "ls"
+
+dotnet-format-test:
+  tags:
+    - sopro
+  image: mcr.microsoft.com/dotnet/sdk:6.0-focal
+  stage: test
+  variables:
+      test_path: "$project/$project"
+  before_script:
+      - dotnet tool install -g dotnet-format --version "6.*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json
+  script:
+      - "cd $test_path"
+      - "dotnet format -v diag --verify-no-changes"
+  retry:
+      max: 0
+      when:
+          - runner_system_failure
+          - stuck_or_timeout_failure
+  allow_failure: true
+  except:
+
+unit-test:
+  tags:
+  - sopro
+  image: mcr.microsoft.com/dotnet/sdk:6.0-focal
+    # image: mcr.microsoft.com/dotnet/aspnet:6.0-focal
+  stage: test
+  variables:
+    test_path: "$project/$project.UnitTests"
+  before_script:
+    - "cd NACTAM"
+    - "sh ./install_npm.sh > .npm_install_log"
+    - "cd .."
+  script:
+    - "cd $project/"
+    - "cd .."
+    - "cd $test_path"
+    - "dotnet restore"
+    - "dotnet test"
+  retry: 0
+  allow_failure: true
+
+ui-test:
+  tags:
+  - sopro
+  image: mcr.microsoft.com/dotnet/sdk:6.0-focal
+    # image: mcr.microsoft.com/dotnet/aspnet:6.0-focal
+  stage: test
+  variables:
+    test_path: "$project/$project.UITests"
+  before_script:
+    - "cd NACTAM"
+    - "sh ./install_npm.sh > .npm_install_log"
+    - "cd .."
+  script:
+    - "cd $project/$project"
+    - "dotnet tool update --global dotnet-ef > .dotnet_install_log"
+    - "export PATH=\"$PATH:/root/.dotnet/tools\""
+    - "dotnet ef database update > .dotnet_ef_log"
+    - "dotnet run > .dotnet_log &"
+    - "cd .."
+    - "sh ./install_chrome.sh > .chrome_install_log"
+    - "cd .."
+    - "cd $test_path"
+    - "dotnet test"
+  retry: 0
+  allow_failure: true
+
+kaniko-build-dev-feature:
+    tags:
+        - sopro
+    variables:
+        # Additional options for Kaniko executor.
+        # For more details see https://github.com/GoogleContainerTools/kaniko/blob/master/README.md#additional-flags
+        IMAGE_TAG_NAME: "team15:unstable"
+        KANIKO_ARGS: "--single-snapshot"
+        KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR/$project/$project
+    stage: deploy
+    image:
+        # For latest releases see https://github.com/GoogleContainerTools/kaniko/releases
+        # Only debug/*-debug versions of the Kaniko image are known to work within Gitlab CI
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: [""]
+    script:
+        - export IMAGE_TAG=${CI_REGISTRY_IMAGE}/${IMAGE_TAG_NAME}
+        - echo $IMAGE_TAG
+        - mkdir -p /kaniko/.docker
+        # Write credentials to access Gitlab Container Registry within the runner/ci
+        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+        # Build and push the container. To disable push add --no-push
+        - DOCKERFILE_PATH=${DOCKERFILE_PATH:-"$KANIKO_BUILD_CONTEXT/Dockerfile"}
+        - /kaniko/executor --context $KANIKO_BUILD_CONTEXT --dockerfile $DOCKERFILE_PATH --no-push --destination $IMAGE_TAG $KANIKO_ARGS
+    needs:
+        - unit-test
+        - ui-test
+    retry: 2
+    allow_failure: false
+    except:
+        - dev
+        - main
+        - master
+
+kaniko-build-unstable:
+    tags:
+        - sopro
+    variables:
+        # Additional options for Kaniko executor.
+        # For more details see https://github.com/GoogleContainerTools/kaniko/blob/master/README.md#additional-flags
+        IMAGE_TAG_NAME: "team15:unstable"
+        KANIKO_ARGS: "--single-snapshot"
+        KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR/$project/$project
+    stage: deploy
+    image:
+        # For latest releases see https://github.com/GoogleContainerTools/kaniko/releases
+        # Only debug/*-debug versions of the Kaniko image are known to work within Gitlab CI
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: [""]
+    script:
+        - export IMAGE_TAG=${CI_REGISTRY_IMAGE}/${IMAGE_TAG_NAME}
+        - echo $IMAGE_TAG
+        - mkdir -p /kaniko/.docker
+        # Write credentials to access Gitlab Container Registry within the runner/ci
+        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+        # Build and push the container. To disable push add --no-push
+        - DOCKERFILE_PATH=${DOCKERFILE_PATH:-"$KANIKO_BUILD_CONTEXT/Dockerfile"}
+        - /kaniko/executor --context $KANIKO_BUILD_CONTEXT --dockerfile $DOCKERFILE_PATH --destination $IMAGE_TAG $KANIKO_ARGS
+    needs:
+        - unit-test
+        - ui-test
+    retry: 2
+    allow_failure: false
+    only:
+        - dev
+
+kaniko-build-stable:
+    tags:
+        - sopro
+    variables:
+        # Additional options for Kaniko executor.
+        # For more details see https://github.com/GoogleContainerTools/kaniko/blob/master/README.md#additional-flags
+        IMAGE_TAG_NAME: "team15:stable"
+        KANIKO_ARGS: "--single-snapshot"
+        KANIKO_BUILD_CONTEXT: $CI_PROJECT_DIR/$project/$project
+    stage: deploy
+    image:
+        # For latest releases see https://github.com/GoogleContainerTools/kaniko/releases
+        # Only debug/*-debug versions of the Kaniko image are known to work within Gitlab CI
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: [""]
+    script:
+        - export IMAGE_TAG=${CI_REGISTRY_IMAGE}/${IMAGE_TAG_NAME}
+        - echo $IMAGE_TAG
+        - mkdir -p /kaniko/.docker
+        # Write credentials to access Gitlab Container Registry within the runner/ci
+        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+        # Build and push the container. To disable push add --no-push
+        - DOCKERFILE_PATH=${DOCKERFILE_PATH:-"$KANIKO_BUILD_CONTEXT/Dockerfile"}
+        - /kaniko/executor --context $KANIKO_BUILD_CONTEXT --dockerfile $DOCKERFILE_PATH --destination $IMAGE_TAG $KANIKO_ARGS
+    needs:
+        - unit-test
+        - ui-test
+        - dotnet-format-test
+    retry: 2
+    allow_failure: false
+    only:
+        - main
+        - master

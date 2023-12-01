@@ -1,0 +1,66 @@
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+	<!-- Page Heading -->
+	<h1 class="h3 mb-2 text-gray-800">Offene Anfragen</h1>
+
+	<!-- DataTales Example -->
+	<div class="card shadow mb-4">
+		<div class="card-body">
+			<div class="table-responsive">
+				<table id="myUser-table" class="table table-bordered" width="100%" cellspacing="0">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th style="width: 180px;">Art</th>
+							<th style="width: 448px;"></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(var req in @Model.Requests){
+							<tr>
+							<td>
+								<div class="col text-left d-flex align-items-center">										
+									<span class="label label-default">@req.Advisor.FirstName @req.Advisor.LastName</span>
+								</div>
+							</td>
+							<td>
+								<div class="col text-left d-flex align-items-center">										
+									@if(@req.Status == InsightStatus.SimpleUnaccepted){
+										<span class="label label-default">Einfache</span>
+									}else{
+										<span class="label label-default">Erweitert</span>
+									}
+								</div>
+							</td>
+							<td>
+								<div class="col text-right">
+									<div class="btn-group" role="group">
+										@if(@req.Status == InsightStatus.SimpleUnaccepted){
+											<form method="post" asp-action="AcceptAdvisor" asp-route-userName="@req.Advisor.UserName" asp-route-isExtended=false>
+												<button class="btn btn-success rounded mr-2" style="width: 200px">Akzeptieren</button>
+											</form>
+											<form method="post" asp-action="DenyAdvisor" asp-route-userName="@req.Advisor.UserName" asp-route-isExtended=false>
+												<button class="btn btn-danger rounded" style="width: 200px">Ablehnen</button>
+											</form>
+										}else{
+											<form method="post" asp-action="AcceptAdvisor" asp-route-userName="@req.Advisor.UserName" asp-route-isExtended=true>
+												<button class="btn btn-success rounded mr-2" style="width: 200px">Akzeptieren</button>
+											</form>
+											<form method="post" asp-action="DenyAdvisor" asp-route-userName="@req.Advisor.UserName" asp-route-isExtended=true>
+												<button class="btn btn-danger rounded" style="width: 200px">Ablehnen</button>
+											</form>
+										}
+										
+									</div>
+								</div>
+						
+							</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>

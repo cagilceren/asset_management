@@ -1,0 +1,331 @@
+@model NACTAM.ViewModels.TransactionsViewModel
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+@{
+	ViewData["Title"] = "Transaktion anlegen";
+}
+<div class="container">
+	<div class="card o-hidden border-0 shadow-lg my-5">
+		<div class="card-body p-0">
+			<!-- Nested Row within Card Body -->
+			<div class="row">
+				<div class="col-lg-3"></div>
+				<div class="col-lg-6">
+					<div class="p-5">
+						@if (ViewData["RateLimitError"] != null && @Model != null)
+						{
+							<div class="alert alert-danger">
+								@ViewData["RateLimitError"]
+							</div>
+						}
+						@if (ViewData["BalanceError"] != null && @Model != null)
+						{
+							<div class="alert alert-danger">
+								@ViewData["BalanceError"]
+							</div>
+						}
+						@if (ViewData["DateError"] != null && @Model != null)
+						{
+							<div class="alert alert-danger">
+								@ViewData["DateError"]
+							</div>
+						}
+
+						<div class="text-center">
+							<h1 class="h4 text-gray-900 mb-4">Fügen Sie eine Transaktion hinzu</h1>
+						</div>
+						<form class="user" asp-controller="Transaction" asp-action="CreateTransactionPost" method="post">
+							<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+							<div class="form-group">
+								<label class="control-label small mb-1">Datum</label>
+								<div class="input-group">
+									<input class="form-control form-control-user" asp-for="Date" placeholder="Datum" min="0" id="date-input">
+									<button type="button" class="btn btn-primary btn-user" id="btn-now">Heute</button>
+								</div>
+								<span asp-validation-for="Date" class="text-danger"></span>
+								<span id="date-validation" class="text-danger"></span>
+								<span id="date-validation-year" class="text-success"></span>
+							</div>
+
+							<div class="form-group">
+								<label class="control-label small mb-1">Kryptowährung</label>
+								<select class=" form-control form-control-user" id="select2" style="padding: 0 1rem; height: 3rem;" asp-for="CryptoCurrency">
+									<option value="" disabled selected>Kryptowährung</option>
+									@if (ViewBag.Currencies != null)
+									{
+										foreach (CryptoCurrency cryptoCurrency in ViewBag.Currencies)
+										{
+											<option value="@cryptoCurrency.Name">@cryptoCurrency.Name (@cryptoCurrency.ShortName.ToUpper())</option>
+										}
+									}
+								</select>
+								<span asp-validation-for="CryptoCurrency" class="text-danger"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label small mb-1">Menge</label>
+								<input class="form-control form-control-user" asp-for="Amount" placeholder="Menge" oninput="convertDotToComma(this)"></input>
+								<span asp-validation-for="Amount" class="text-danger"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label small mb-1">Eurokurs</label>
+								<div class="d-flex">
+									<div class="flex-grow-1 me-2">
+										<input class="form-control form-control-user" asp-for="Rate" placeholder="Eurokurs" id="calculated" oninput="convertDotToComma(this)"></input>
+									</div>
+									<div class="flex-grow-0" style="width: 25%;">
+										<a class="btn btn-primary btn-block btn-user" style="height: 100%; color: #fff;" id="calculate">Errechnen</a>
+									</div>
+								</div>
+								<span asp-validation-for="Rate" class="text-danger"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label small mb-1">Art der Transaktion</label>
+								<select class="form-control form-control-user" style="padding: 0 1rem; height: 3rem;" asp-for="Type">
+									<option value="" disabled selected>Art der Transaktion</option>
+									<option value="Buy">Kauf</option>
+									<option value="Sell">Verkauf</option>
+									<option value="Mining">Mining</option>
+									<option value="Staking">Staking</option>
+								</select>
+								<span asp-validation-for="Type" class="text-danger"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label small mb-1">Gebühr in Euro</label>
+								<input class="form-control form-control-user" asp-for="Fee" placeholder="Gebühr in Euro" oninput="convertDotToComma(this)"></input>
+								<span asp-validation-for="Fee" class="text-danger"></span>
+							</div>
+							<div class="row">
+								<div class="col-4">
+									<a class="btn btn-danger btn-user btn-block" href="@Url.Action("Index")">Abbruch</a>
+								</div>
+								<div class="col-8">
+									<button type="submit" id="btn-bestaetigen" class="btn btn-primary btn-user btn-block">Bestätigen</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="col-lg-3"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!-- Warning Modal HTML structure -->
+<div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="warningModalLabel">Achtung: Transaktion älter als 365 Tage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+	        <div class="modal-body">
+		        <div class="alert alert-warning" role="alert">
+                    <strong>Bitte beachten Sie!</strong> Das Anlegen dieser Transaktion könnte Auswirkungen auf Ergebnisse haben, die bereits Teil einer früheren Steuererklärung waren.
+                </div>
+		        Möchten Sie diese Transaktion trotzdem anlegen?
+	        </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bearbeiten</button>
+                <button type="button" class="btn btn-warning" id="btn-confirm">Fortfahren</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal HTML structure -->
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">Fehler beim Abrufen des Kurses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Es kann kein Kurs abgerufen werden. Mögliche Gründe:
+                <ul>
+                    <li>Es können keine Anfragen an die API gestellt werden (RateLimit).</li>
+                    <li>Zum angegebenen Datum liegen keine Kurse vor.</li>
+                    <li>Es gibt keinen Kurs zur angegebenen Kryptowährung.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Input of dropdown --->
+<script>
+    $('#select2').select2();
+</script>
+<!-- Date Validation --->
+<script>
+	var date = document.getElementById('date-input');
+	var validationField = document.getElementById('date-validation');
+	var validationFieldForYear = document.getElementById('date-validation-year');
+
+	date.addEventListener('change', function() {
+		var entered = new Date(date.value);
+		var current = new Date();
+
+		if (entered > current) {
+			// clear other field
+			validationFieldForYear.textContent = ''
+			validationField.textContent = 'Das Datum darf nicht in der Zukunft liegen';
+		} else {
+			// 86400000 = Milliseconds per day
+			var diff = Math.floor((current - entered) / 86400000);
+			if(diff >= 365) {
+				// clear other field
+				validationField.textContent = '';
+				validationFieldForYear.textContent = 'Sie befinden sich in der Steuerfreien Haltefrist';
+			} else {
+				validationField.innerText = '';
+				validationFieldForYear.innerText = '';
+			}
+		}
+    });
+</script>
+<script>
+	/// <summary>
+	/// Calculates Rate of selected currency
+	/// Possible to get historic data, if date is in past
+	/// Replaces also . with , because of rounding-bug
+	/// Authornames: Marco Lembert
+	/// </summary>
+	/// <returns>decimal value of selected currency</returns>
+    $(document).ready(function() {
+        $('#calculate').click(function() {
+            var value = document.getElementById("select2").value.toString();
+            var d = document.getElementById("date-input");
+
+            $.ajax({
+                url: '/Transaction/CurrencyRate/',
+                type: "GET",
+                data: { currency: value, date: d.value },
+                success: function(data) {
+                    if (data === "Error") {
+                        // Display the modal when the server response is "Error"
+                        $('#errorModal').modal('show');
+                    } else {
+                        var dataString = typeof data === 'string' ? data : JSON.stringify(data);
+                        var modified = dataString.replace(".", ",");
+                        $("#calculated").val(modified);
+                    }
+                },
+                error: function() {
+                    // Display the modal in case of an error (e.g., no response from the server)
+                    $('#errorModal').modal('show');
+                }
+            })
+        });		
+    });
+</script>
+
+<script>
+    /// <summary>
+	/// This method gets current formatted datetime to fit into input field
+	/// Authornames: Philipp Eckel
+	/// </summary>
+	/// <returns>Formatted string in DateTime format</returns>
+    function getCurrentDateTime() {
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = String(now.getMonth() + 1).padStart(2, '0');
+        var day = String(now.getDate()).padStart(2, '0');
+        var hours = String(now.getHours()).padStart(2, '0');
+        var minutes = String(now.getMinutes()).padStart(2, '0');
+        var formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        return formattedDateTime;
+    }
+
+    // Set the current date and time when the "Now" button is clicked
+    document.getElementById('btn-now').addEventListener('click', function () {
+        document.getElementById('date-input').value = getCurrentDateTime();
+    });
+</script>
+<!-- End of Date Validation --->
+
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            var el = document.querySelector("[dir=\"ltr\"]>span>span");
+            el.style.height = "44px";
+            el.style.borderRadius = "22px";
+            el.style.verticalAlign = "middle";
+            el.style.paddingTop = "8px";
+            document.querySelector("[dir=\"ltr\"]>span>span>span:nth-child(2)").style.top = "8px";
+        }, 250);
+
+        // Close the modal and reset its content when the close button (x) is clicked
+        $('#errorModal').on('hidden.bs.modal', function () {
+            $("#errorModal .modal-body").html('');
+        });
+
+        // Check the date and show the warning dialog if the date is older than 365 days
+        $('#btn-bestaetigen').click(function(e) {
+            e.preventDefault(); // Prevent the default form submission
+        
+            var date = document.getElementById('date-input').value;
+            var entered = new Date(date);
+            var current = new Date();
+            if (entered < current && Math.floor((current - entered) / 86400000) >= 365) {
+                // Show the warning dialog if the date is older than 365 days
+                $('#warningModal').modal('show');
+            } else {
+                // Proceed with the form submission
+                $('form.user').submit();
+            }
+        });
+		
+		$('#btn-confirm').click(function() {
+            $('form.user').submit();
+        });
+
+        // Function to enable or disable the "Gebühr in Euro" field based on the selected transaction type
+        function updateFeeField() {
+            var type = $('#Type').val();
+            var previousFeeValue = $('#Fee').val();
+            if (previousFeeValue === '0') {
+                previousFeeValue = '';
+            }
+            if (type === 'Mining' || type === 'Staking') {
+                $('#Fee').val('0');
+                $('#Fee').prop('readonly', true);
+            } else {
+                $('#Fee').val(previousFeeValue || ''); // Restore previous value or clear the field if no previous value
+                $('#Fee').prop('readonly', false);
+            }
+        }
+
+        // Call the function when the page is ready to set the initial state of the field
+        updateFeeField();
+
+        // Call the function whenever the "Art der Transaktion" dropdown value changes
+        $('#Type').change(function() {
+            updateFeeField();
+        });
+    });
+</script>
+<script>
+	/// <summary>
+	/// Converts live all dots to commas, because dots causing rounding errors
+	/// Authornames: Marco Lembert
+	/// </summary>
+	/// <param name="inputElement">Current input written into inputfield</param>
+	function convertDotToComma(inputElement) {
+  		var value = inputElement.value;
+  		if (value.includes(".")) {
+    		value = value.replace(/\./g, ",");
+    		inputElement.value = value;
+  		}
+	}
+</script>
+

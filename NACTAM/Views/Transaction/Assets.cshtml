@@ -1,0 +1,145 @@
+@model NACTAM.ViewModels.AssetsOverviewModel
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.4/css/jquery.dataTables.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+@{
+	ViewData["Title"] = "Assetsübersicht";
+}
+
+<div class="container-fluid">
+	<div class="d-flex justify-content-end">
+		<h1 class="h3 mb-2 text-gray-800">@ViewData["Title"]</h1>
+		<div class="ml-auto d-flex">
+			<div class="col-xl-3 col-md-6 mb-2">
+				<form asp-controller="Transaction" asp-action="UpdateCurrencies" method="post">
+					<button type="submit" class="btn btn-warning btn-circle" title="Währungen aktualisieren">
+						<span class="icon b">
+							<i class="fas fa-redo-alt"></i>
+						</span>
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		@if (ViewData["Error"] != null && @Model != null)
+                			{
+                    			<div class="alert alert-danger">
+                       				 @ViewData["Error"]
+        							<button type="button" class="close" onclick="dismissError()">
+                    					<span>&times;</span>
+                					</button>
+                    			</div>
+                			}
+		<div class="col-md-4">
+			<div class="card o-hidden border-0 shadow-lg my-5">
+				<div class="card-body p-0">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">Gesamtwert</h6>
+					</div>
+
+					<div class="p-2 mb-2">
+						<a class="text-secondary">Dieser Wert ist auf die letzten 4 Nachkommastellen gerundet</a>
+					</div>
+					<div class="p-4">
+						@{
+							decimal sum = 0;
+							foreach (var el in @Model.Assets)
+							{
+								sum += @el.Value;
+							}
+
+							sum = Math.Round(sum, 4);
+						}
+						<div class="text-center">
+							<h4 class="display-5 font-weight-bold">@sum €</h4>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Chart data from currency --->
+		<div class="col-md-8">
+			<div class="card o-hidden border-0 shadow-lg my-5">
+				<div class="card-body p-0">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">Entwicklung</h6>
+					</div>
+					<div class="p-4">
+						<select class=" form-control form-control-user" id="currencySelectChart" style="width: 30%; height: 3rem;">
+							<option value="" disabled selected>Kryptowährung</option>
+							@if (ViewBag.Currencies != null)
+							{
+								foreach (string cryptoCurrency in ViewBag.Currencies)
+								{
+									<option value="@cryptoCurrency">@cryptoCurrency</option>
+								}
+							}
+						</select>
+						<div>
+							<canvas id="currencyCtx" style="width: 100%; max-height: 10em;"></canvas>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<!-- Assets table --->
+		<div>
+			<div class="card o-hidden border-0 shadow-lg my-5">
+				<div class="card-body p-0">
+					<div class="card-header py-3">
+						<h6 class="m-0 font-weight-bold text-primary">Assets</h6>
+					</div>
+					<div class="p-4">
+						<table class="table" id="assets-table">
+							<thead>
+							<tr>
+								<th></th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Currency)</th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Amount)</th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Value)</th>
+								<th>@Html.DisplayNameFor(Model => Model.Assets.First().Rate)</th>
+							</tr>
+							</thead>
+							<tbody>
+							@foreach (var item in @Model.Assets)
+							{
+								<tr>
+									<td><img src="@item.Logo" alt="" width="35" height="35"></td>
+									<td>@item.Currency</td>
+									<td>@item.Amount</td>
+									<td>@item.Value €</td>
+									<td>@item.Rate €/@item.ShortName.ToUpper()</td>
+								</tr>
+							}
+							</tbody>
+						</table>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	/// <summary>
+	/// currency dropdown select field
+	/// </summary>
+    $('#currencySelectChart').select2();
+</script>
+<script>
+	/// <summary>
+	///listener for currency - change in select
+	/// Authornames: Marco Lembert
+	/// </summary>
+	$('#currencySelectChart').on('change', function() {
+  		updateCanvas($(this).val());
+	});
+</script>
+@section Scripts {
+	<script src="~/js/assets.js" asp-append-version="true"></script>
+}

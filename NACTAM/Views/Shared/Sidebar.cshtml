@@ -1,0 +1,93 @@
+	<!-- Sidebar -->
+	<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordion-sidebar">
+
+		<!-- Sidebar - Brand -->
+		<a class="sidebar-brand d-flex align-items-center justify-content-center" asp-action="Index" asp-controller="Home" >
+			<div class="sidebar-brand-icon">
+				<img width="50" src="@Url.Content("~/images/logo.svg")" class="logo-small" alt="">
+			</div>
+			<div class="sidebar-brand-text mx-3">NACTAM</div>
+		</a>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider my-0">
+
+		<!-- Nav Item - Dashboard -->
+		<li class="nav-item">
+			<a class="nav-link align-items-center justify-content-center" asp-action="Index" asp-controller="Home" >
+				<i class="fa-solid fa-house"></i>
+				<span>Dashboard</span>
+			</a>
+		</li>
+
+		<!-- Divider -->
+		<hr class="sidebar-divider my-0">
+
+		<!-- Heading -->
+		<div class="sidebar-heading"></div>
+
+		<!-- Nav Item - Assets Collapse Menu -->
+		<li class="nav-item">
+			<a class="nav-link" asp-area="" asp-controller="Transaction" asp-action="Assets">
+				<i class="fa-brands fa-bitcoin"></i>
+				<span>Assets</span>
+			</a>
+			<div id="collapse-utilities" class="collapse" aria-labelledby="heading-utilities"
+				data-parent="#accordion-sidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<h6 class="collapse-header">Custom Utilities:</h6>
+					<a class="collapse-item" href="utilities-color.html">Colors</a>
+					<a class="collapse-item" href="utilities-border.html">Borders</a>
+					<a class="collapse-item" href="utilities-animation.html">Animations</a>
+					<a class="collapse-item" href="utilities-other.html">Other</a>
+				</div>
+			</div>
+		</li>
+
+		<!-- Nav Item - Transactions Collapse Menu -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" asp-area="" asp-controller="Transaction" asp-action="Transactions"
+				aria-expanded="true" aria-controls="collapse-transactions" id="transactions">
+				<i class="fa-solid fa-money-bill-transfer"></i>
+				<span>Transaktionen</span>
+			</a>
+		</li>
+
+		<!-- Nav Item - Services Collapse Menu -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapse-services" id="services"
+				aria-expanded="true" aria-controls="collapse-services">
+				<i class="fas fa-chart-bar"></i>
+				<span>Services</span>
+			</a>
+			<div id="collapse-services" class="collapse" aria-labelledby="heading-services" data-parent="#accordion-sidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<a class="collapse-item" asp-area="" asp-controller="Services" asp-action="TaxRecommendation" id="tax-recommendation">
+						<span>Steuerliche Empfehlung</span>
+					</a>
+					<a class="collapse-item" asp-area="" asp-controller="Services" asp-action="TaxEvaluation" id="tax-evaluation">
+						<span>Steuerliche Auswertung</span>
+					</a>
+				</div>
+			</div>
+		</li>
+
+			<!-- Nav Item - Settings Collapse Menu -->
+		<li class="nav-item">
+			<a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapse-settings"
+				aria-expanded="true" aria-controls="collapse-settings">
+				<i class="fa-solid fa-gear"></i>
+				<span>Einstellungen</span>
+			</a>
+			<div id="collapse-settings" class="collapse" aria-labelledby="heading-settings" data-parent="#accordion-sidebar">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<a class="collapse-item" asp-area="" asp-controller="Home" asp-action="Settings">
+						<span>Account</span>
+					</a>
+					<a class="collapse-item" asp-area="" asp-controller="Home" asp-action="Insights">
+						<span>Einsichtnahmen</span>
+					</a>
+				</div>
+			</div>
+		</li>
+	</ul>

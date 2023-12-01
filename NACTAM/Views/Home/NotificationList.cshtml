@@ -1,0 +1,17 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using NACTAM.Models.Repositories
+@using NACTAM.Models
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject INotificationRepository Repository
+@inject IUserRepository UserRepository
+
+@{
+	var user = await UserManager.GetUserAsync(User);
+}
+
+<div id="notification-center">
+@(Html.Raw(Repository.NotificationsToHTML(Repository.NotificationsFor(user))))
+</div>

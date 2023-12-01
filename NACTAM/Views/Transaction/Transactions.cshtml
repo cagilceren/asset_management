@@ -1,0 +1,274 @@
+@using System.Globalization
+@model NACTAM.ViewModels.TransactionsOverviewViewModel
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+@{
+	ViewData["Title"] = "Transaktionsübersicht";
+		// Import the System.Globalization namespace
+
+	// Set the desired culture (in this case, German - Germany)
+	CultureInfo germanCulture = new CultureInfo("de-DE");
+	System.Threading.Thread.CurrentThread.CurrentCulture = germanCulture;
+	System.Threading.Thread.CurrentThread.CurrentUICulture = germanCulture;
+
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet" />
+
+
+<div class="container-fluid">
+	<div class="d-flex justify-content-end">
+		<h1 class="h3 mb-2 text-gray-800">@ViewData["Title"]</h1>
+		<div class="ml-auto d-flex">
+			<div class="col-xl-3 col-md-6 mb-4">
+				<a href="/Transaction/CreateTransaction" role="button" class="btn btn-warning btn-circle" title="Hinzufügen">
+					<span class="icon b">
+						<i class="fas fa-plus"></i>
+					</span>
+				</a>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<button type="button" class="btn btn-primary btn-circle" data-toggle="modal" data-target="#importModal" title="Importieren">
+					<span class="icon b">
+						<i class="fas fa-file-import"></i>
+					</span>
+				</button>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<a href="/ExportTransactions" role="button" class="btn btn-success btn-circle" onclick="showExportNotification()" title="Exportieren">
+					<span class="icon b">
+						<i class="fas fa-file-csv"></i>
+					</span>
+				</a>
+			</div>
+		</div>
+		@if (ViewData["Error"] != null && @Model != null)
+		{
+			<div class="alert alert-danger alert-dismissible fade show" role="alert">
+				<strong>Fehler!</strong> @ViewData["Error"]
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+		}
+	</div>
+
+
+	<!-- Table --->
+	<div class="card o-hidden border-0 shadow-lg my-5">
+		<div class="card-body p-0">
+			<div class="card-header py-3">
+				<h6 class="m-0 font-weight-bold text-primary">Transaktionen</h6>
+			</div>
+			<div class="p-4">
+				<table class="table" id="transaction-table">
+					<thead>
+					<tr>
+						<th></th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().CryptoCurrency)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Type)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Date)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Rate)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Amount)</th>
+						<th>@Html.DisplayNameFor(Model => Model.Transactions.First().Fee)</th>
+						<th>Aktion</th>
+					</tr>
+					</thead>
+					<tbody>
+					@foreach (var item in @Model.Transactions)
+					{
+						<tr>
+							<td><img src="@item.Logo" alt="" width="35" height="35"></td>
+							<td>@item.CryptoCurrency</td>
+							<td class="type-@item.Type.ToLower()">@item.Type</td>
+							<td data-sort="@item.Date.ToString("o", CultureInfo.InvariantCulture)">@item.Date</td>
+							<td>@item.Rate € / @item.CryptoSymbol.ToUpper()</td>
+							<td>@item.Amount</td>
+							<td>@item.Fee €</td>
+							<td>
+								<div class="row">
+									<div class="col-sm-6">
+										<a type="submit" asp-action="EditTransaction" asp-route-id="@item.Id" class="btn btn-info btn-circle">
+											<span class="icon">
+												<i class="fas fa-edit"></i>
+											</span>
+										</a>
+									</div>
+									<div class="col-sm-6">
+									@if (DateTime.Now.Subtract(item.Date).Days > 365)
+							{
+								<button type="button" class="btn btn-danger btn-circle delete-btn-old-date" data-toggle="modal" data-target="#deleteModalOldDate" data-transaction-id="@item.Id" id="deleteBtn">
+									<span class="icon">
+										<i class="fas fa-trash"></i>
+									</span>
+								</button>
+							}
+							else
+							{
+								<button type="button" class="btn btn-danger btn-circle delete-btn" data-toggle="modal" data-target="#deleteModal" data-transaction-id="@item.Id" id="deleteBtn">
+									<span class="icon">
+										<i class="fas fa-trash"></i>
+									</span>
+								</button>
+							}
+
+									</div>
+								</div>
+							</td>
+						</tr>
+					}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<p class="p-4">
+			Anzahl der Transaktionen: @Model.Transactions.Count
+		</p>
+	</div>
+
+	<!-- Import Modal -->
+	<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="importModalLabel">Importieren von Transaktionen</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<!-- Import form -->
+					<form asp-action="ImportTransactions" enctype="multipart/form-data" method="post">
+						<div class="form-group">
+							<label for="csvFile" class="form-label">CSV-Datei mit Transaktionen auswählen</label>
+							<input type="file" class="form-control" name="csvFile" id="formFile" required>
+						</div>
+						<button type="submit" class="btn btn-primary">Importieren</button>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Schließen</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteModalLabel">Transaktion löschen</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<p>Sind Sie sicher, dass Sie diese Transaktion löschen möchten?</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+				<!-- Use a regular form with the action to delete the transaction -->
+				<form id="deleteForm" method="post" asp-controller="Transaction" asp-action="RemoveTransaction">
+					<input type="hidden" id="transactionId" name="id" value="" />
+					<button type="submit" class="btn btn-danger" id="deleteButton">Löschen</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal for Old Transactions -->
+<div class="modal fade" id="deleteModalOldDate" tabindex="-1" role="dialog" aria-labelledby="deleteModalOldDateLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="deleteModalOldDateLabel">Transaktion löschen (älter als 365 Tage)</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<div class="alert alert-warning" role="alert">
+					<strong>Bitte beachten Sie!</strong> Das Löschen dieser Transaktion könnte Auswirkungen auf Ergebnisse haben, die bereits Teil einer früheren Steuererklärung waren.
+				</div>
+				<div class="form-check mb-3">
+					<input class="form-check-input" type="checkbox" value="" id="acknowledgeCheckbox">
+					<label class="form-check-label" for="acknowledgeCheckbox">
+						Ich bin mir der Konsequenzen bewusst
+					</label>
+				</div>
+				<p>Sind Sie sicher, dass Sie diese Transaktion löschen möchten?</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+				<!-- Use a regular form with the action to delete the transaction -->
+				<form id="deleteFormOldDate" method="post" asp-controller="Transaction" asp-action="RemoveTransaction">
+					<input type="hidden" id="transactionIdOldDate" name="id" value="" />
+					<button type="submit" class="btn btn-danger" id="deleteButtonOld" disabled>Löschen</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script src="~/js/transactions.js" asp-append-version="true"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+	<script>
+			// Function to show the toast notification
+			function showExportNotification() {
+					toastr.success('<i class="fas fa-download"></i> Download gestartet!', 'Exportiere Transaktionen', {
+						timeOut: 3000,
+						closeButton: true, // Optional: Zeigt einen Schließen-Button für die Benachrichtigung an
+						closeHtml: '<button><i class="fas fa-times"></i></button>' // Optional: Benutzerdefinierter HTML-Code für den Schließen-Button
+					});
+			}
+
+			// For closing delete validation error
+			function dismissError() {
+				var errorDiv = document.querySelector(".alert.alert-danger");
+				if (errorDiv) {
+					errorDiv.style.display = "none"; // Verberge die Fehlermeldung
+				}
+			}
+
+			$(document).ready(function () {
+				$('.delete-btn').on('click', function () {
+					var transactionId = $(this).data('transaction-id');
+					$('#transactionId').val(transactionId);
+				});
+
+				$('.delete-btn-old-date').on('click', function () {
+					var transactionId = $(this).data('transaction-id');
+					$('#transactionIdOldDate').val(transactionId);
+				});
+
+				// Clear the form data when the regular modal is closed
+				$('#deleteModal').on('hidden.bs.modal', function () {
+					$('#deleteForm')[0].reset();
+				});
+
+				// Clear the form data when the old date modal is closed
+				$('#deleteModalOldDate').on('hidden.bs.modal', function () {
+					$('#deleteFormOldDate')[0].reset();
+				});
+
+				 $('#acknowledgeCheckbox').on('change', function () {
+					// Enable the delete button after 5 seconds when the checkbox is checked
+					setTimeout(function () {
+						$('#deleteButtonOld').prop('disabled', !$('#acknowledgeCheckbox').prop('checked'));
+					}, 3000); // 5000 milliseconds = 5 seconds
+
+					// Disable the delete button immediately when the checkbox is unchecked
+					if (!$(this).prop('checked')) {
+						$('#deleteButtonOld').prop('disabled', true);
+					}
+				});
+			});
+
+		</script>
+}
+
+
+
+
